@@ -127,9 +127,10 @@ To offer the plugin to everyone who opens a project, commit this to the project'
 ## Testing
 
 **Behaviour:** [`evals/`](evals/) has six cases, each run three times with and without the plugin and graded on
-what Claude actually did (`claude plugin eval . --allow-tools Write`). Pass rates on 2026-11-20:
+what Claude actually did (`claude plugin eval . --allow-tools Write`, Claude Code 2.1.329). Pass rates on
+2026-11-20, with / without the plugin:
 
-| Case | Default model: with / without | Haiku: with / without |
+| Case | Claude Opus 5.5 | Claude Haiku 5.5 |
 | --- | --- | --- |
 | Checks jobs without a Duo push per command | 100% / 56% | 100% / 44% |
 | Keeps conda envs out of purged scratch | 100% / 50% | 83% / 0% |
@@ -143,9 +144,9 @@ template.
 
 **Triggering:** [`evals/triggering/`](evals/triggering/) checks that the skill activates for SeaWulf requests and
 stays quiet for near-misses (Slurm on other clusters, a personal GPU, Duo for email, course registration). Claude
-runs with only the Skill tool, so nothing touches the cluster. Result: 20/20 correct.
+runs with only the Skill tool, so nothing touches the cluster. Result: 20/20 correct (Claude Opus 5.5).
 
-Both kinds are real, billed model runs (about $3 for the default model, under $1 for Haiku, about $1 for
+Both kinds are real, billed model runs (about $3 on Opus 5.5, under $1 on Haiku 5.5, about $1 for
 triggering), and none of them connect to SeaWulf or send Duo pushes.
 
 ## Contributing
