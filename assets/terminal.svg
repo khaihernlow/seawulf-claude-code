@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="484" viewBox="0 0 1180 484" role="img" aria-label="Terminal: preflight, opening one session with one Duo push, then running a command through it">
+  <rect width="1180" height="484" rx="12" fill="#0d1117"/>
+  <rect width="1180" height="40" rx="12" fill="#161b22"/><rect y="28" width="1180" height="12" fill="#161b22"/>
+  <circle cx="24" cy="20" r="7" fill="#ff5f56"/><circle cx="48" cy="20" r="7" fill="#ffbd2e"/><circle cx="72" cy="20" r="7" fill="#27c93f"/>
+  <text x="590" y="25" text-anchor="middle" font-family="ui-sans-serif, system-ui, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#8b949e">One Duo approval, then every command runs through the same session</text>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" xml:space="preserve" style="white-space:pre">
+<text x="28" y="86" fill="#e2e8f0">$ scripts/preflight.sh</text>
+<text x="28" y="112" fill="#94a3b8">Checking ssh setup for 'seawulf'</text>
+<text x="28" y="138" fill="#86efac">&#160;&#160;ok&#160;&#160;&#160;&#160;Host seawulf -&gt; milan.seawulf.stonybrook.edu as jdoe</text>
+<text x="28" y="164" fill="#86efac">&#160;&#160;ok&#160;&#160;&#160;&#160;ControlMaster on (your own login can be reused by the session)</text>
+<text x="28" y="190" fill="#86efac">&#160;&#160;ok&#160;&#160;&#160;&#160;your own login is open (master connection)</text>
+<text x="28" y="216" fill="#fcd34d">&#160;&#160;next&#160;&#160;'sw start' opens the long-lived session (ONE Duo push: tell the user first)</text>
+<text x="28" y="242" fill="#94a3b8"></text>
+<text x="28" y="268" fill="#e2e8f0">$ scripts/sw start</text>
+<text x="28" y="294" fill="#94a3b8">Duo push sent to the user's phone; waiting up to 120 s for approval...</text>
+<text x="28" y="320" fill="#86efac">session open</text>
+<text x="28" y="346" fill="#94a3b8"></text>
+<text x="28" y="372" fill="#e2e8f0">$ scripts/sw run &lt;&lt;'EOF'</text>
+<text x="28" y="398" fill="#e2e8f0">sbatch --test-only templates/gpu-a100.sbatch</text>
+<text x="28" y="424" fill="#e2e8f0">EOF</text>
+<text x="28" y="450" fill="#94a3b8">sbatch: Job 2443554 to start at 2026-11-24T14:36:57 using 8 processors on nodes a100-02 in partition a100</text>
+  </g>
+</svg>

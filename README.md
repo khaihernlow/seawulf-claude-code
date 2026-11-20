@@ -1,3 +1,14 @@
+<p align="center">
+  <img src="assets/banner.svg" alt="seawulf: a Claude Code plugin for Stony Brook's HPC clusters" width="100%">
+</p>
+
+<p align="center">
+  <a href="https://github.com/khaihernlow/seawulf-claude-code/releases"><img alt="Release" src="https://img.shields.io/github/v/release/khaihernlow/seawulf-claude-code?color=0ea5e9"></a>
+  <img alt="Claude Code plugin" src="https://img.shields.io/badge/Claude%20Code-plugin-d97757">
+  <img alt="Checked on SeaWulf" src="https://img.shields.io/badge/checked%20on-SeaWulf%20milan-0f2a44">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue"></a>
+</p>
+
 # seawulf-claude-code
 
 A Claude Code plugin that lets Claude work on **Stony Brook University's HPC clusters**: SeaWulf, plus
@@ -39,6 +50,10 @@ you also need WSL. Claude walks you through the rest the first time.
 - *"Why has my GPU job been pending all day?"*
 
 ## Connecting without a Duo push per command
+
+<p align="center">
+  <img src="assets/terminal.svg" alt="Terminal: preflight checks the setup, sw start opens one session with one Duo push, then sw run sends a command through it" width="100%">
+</p>
 
 Claude checks your setup with `preflight.sh` (which sends no pushes), then uses the cheapest safe option:
 
