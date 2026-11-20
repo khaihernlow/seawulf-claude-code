@@ -22,6 +22,7 @@ NVwulf is a separate GPU cluster (H200 / Blackwell). Many users are new to HPC: 
 6. **`sbatch` and other run-once actions never run twice.** After an unclear failure, check `squeue --me` first.
 7. **Poll gently.** Wait inside one remote command, e.g. `while squeue -h -j $ID | grep -q .; do sleep 30; done`, not with repeated calls.
 8. **Confirm before destructive actions:** `scancel` (only jobs started for this task), bulk `rm`, overwriting results.
+9. **Close the session when the work is done** (`sw stop`). RCI asks users to log out and not leave idle programs on login nodes. Submitted jobs keep running without it.
 
 ## 1. Preflight and connect
 
@@ -41,9 +42,12 @@ SW=<this skill's directory>/scripts/sw
 "$SW" run 600 <<'EOF'       # runs as its own login-shell bash on the login node; exit status is the script's
 squeue --me
 EOF
+"$SW" put ./my-project /gpfs/scratch/$NETID/   # files or folders, up to 50 MB, no extra push
+"$SW" get /gpfs/scratch/$NETID/run1/results ./  # and back
+"$SW" stop                  # when done
 ```
 
-`run` exit 124 means the script is still running on the cluster after the wait: check later, don't rerun. Setup details, keys, Windows and troubleshooting: [references/connecting.md](references/connecting.md).
+`run` exit 124 means the script is still running on the cluster after the wait: check later, don't rerun. Exit 3 means the session ended: ask before starting another. Setup details, keys, Windows and troubleshooting: [references/connecting.md](references/connecting.md).
 
 ## 2. Get current facts
 
@@ -62,11 +66,12 @@ Once connected, run `"$SW" run 300 < scripts/cluster-facts.sh`. It prints the qu
 A first job, done well:
 
 ```
-- [ ] Code on the cluster via git (clone into /gpfs/scratch/$USER/<project>)
+- [ ] Code on the cluster via git (clone into /gpfs/scratch/$USER/<project>), or `sw put` for a folder with no remote
 - [ ] Env outside scratch (home, or project space if big); caches in scratch
 - [ ] Copy a template, fill it in: -shared queue + --mem for small jobs, or a100 + --gres=gpu:1
 - [ ] sbatch --test-only, then sbatch --parsable; note the job id
 - [ ] Wait inside one remote command; read the .out/.err file and sacct -j <id>
 - [ ] If it failed: slurm.md section 9, fix, resubmit
-- [ ] Copy results worth keeping out of scratch
+- [ ] Copy results worth keeping out of scratch (`sw get` for small ones)
+- [ ] `sw stop`
 ```

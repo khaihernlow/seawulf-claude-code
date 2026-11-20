@@ -1,73 +1,128 @@
 #!/usr/bin/env bash
-# sw: run commands on SeaWulf through ONE long-lived ssh session.
+# sw: run commands and move files on SeaWulf through ONE long-lived ssh session.
 #
-# SeaWulf asks for Duo on every new ssh session, even one multiplexed over an existing connection.
-# So instead of one ssh per command (one phone push per command), this keeps a single session open and
-# streams commands into it. Cost: one Duo approval per `sw start`.
+# SeaWulf asks for Duo on every new ssh connection (keys included). Instead of one ssh per command
+# (one phone push each), this keeps a single session open and streams commands into it.
+# Cost: one Duo approval per `sw start`.
 #
-#   sw start              open the session (sends ONE Duo push; waits up to 120 s for approval)
-#   sw run [SECS] < FILE  run a bash script (from stdin or FILE) there; prints its output; exits with its status
-#   sw status             is a session open?
-#   sw stop               close it
+#   sw start                   open the session (sends ONE Duo push; waits up to 120 s for approval)
+#   sw run [SECS] [< FILE]     run a bash script (stdin or FILE) there; prints its output; exits with its status
+#   sw put LOCAL REMOTE_DIR    copy a local file or folder into REMOTE_DIR (created if needed)
+#   sw get REMOTE LOCAL_DIR    copy a remote file or folder into LOCAL_DIR
+#   sw status                  is a session open?
+#   sw stop                    close it (do this when the work is done: RCI asks users to log out)
 #
-# Each script runs in its own `bash` on the cluster with stdin from /dev/null, so `exit`, `cd` or `set -e`
-# in one script can't end or change the session. Output is cut out of the session log between markers.
+# Each script runs as its own login-shell `bash` on the cluster with stdin from /dev/null, so `exit`, `cd`
+# or `set -e` in one script can't end or change the session. put/get stream a gzipped tar as base64 text
+# through the same session (no scp, no extra Duo push); they refuse more than SW_MAX_MB (default 50 MB):
+# use git, Globus or Open OnDemand for big data.
 #
 # Settings (environment):
-#   SW_HOST        ssh host alias (default: seawulf). Set it up as in references/setup.md.
-#   SW_STATE       local state directory (default: ~/.seawulf-session)
+#   SW_HOST        ssh host alias (default: seawulf). See references/connecting.md.
+#   SW_STATE       local state directory (default: ~/.seawulf-session; kept private, mode 700)
+#   SW_MAX_MB      size limit for put/get (default 50)
 #   SW_WSL_DISTRO  Windows only: WSL distribution to use (default: the default distribution)
 #
-# On Windows (Git Bash / MSYS), this script re-runs itself inside WSL, where ssh can hold a session open.
+# On Windows (Git Bash / MSYS) the session lives inside WSL, where ssh can hold one open; this script
+# forwards to WSL by itself.
 set -u
+MAX_MB=${SW_MAX_MB:-50}
+
+b64decode() { base64 -d 2> /dev/null || base64 -D; }   # GNU / newer macOS use -d, older macOS -D
+
+# ---- put / get: built on `run`, so they work wherever `run` works --------------------------------
+case "${1:-}" in
+  put)
+    src=${2:?usage: sw put LOCAL REMOTE_DIR}; dest=${3:?usage: sw put LOCAL REMOTE_DIR}
+    [ -e "$src" ] || { echo "sw put: no such file or folder: $src" >&2; exit 2; }
+    kb=$(du -sk "$src" | cut -f1)
+    [ "$kb" -le $((MAX_MB * 1024)) ] || { echo "sw put: $src is $((kb / 1024)) MB, over SW_MAX_MB=$MAX_MB. Use git, Globus or Open OnDemand." >&2; exit 2; }
+    script=$(mktemp "${TMPDIR:-/tmp}/sw-put.XXXXXX"); trap 'rm -f "$script"' EXIT
+    {
+      printf 'set -e\ndest=%q\nmkdir -p "$dest"\n' "$dest"
+      echo "base64 -d <<'__SW_B64__' | tar xzf - -C \"\$dest\""
+      tar czf - -C "$(dirname "$src")" "$(basename "$src")" | base64 | fold -w 76
+      echo "__SW_B64__"
+      printf 'echo "put: %s -> $dest/%s"\n' "$(basename "$src")" "$(basename "$src")"
+    } > "$script"
+    "$0" run 600 "$script"; exit $?
+    ;;
+  get)
+    src=${2:?usage: sw get REMOTE LOCAL_DIR}; dest=${3:?usage: sw get REMOTE LOCAL_DIR}
+    script=$(mktemp "${TMPDIR:-/tmp}/sw-get.XXXXXX"); out=$(mktemp "${TMPDIR:-/tmp}/sw-get-out.XXXXXX")
+    trap 'rm -f "$script" "$out"' EXIT
+    cat > "$script" <<EOF
+src=$(printf %q "$src")
+[ -e "\$src" ] || { echo "sw get: no such file or folder on the cluster: \$src"; exit 2; }
+kb=\$(du -sk "\$src" | cut -f1)
+[ "\$kb" -le $((MAX_MB * 1024)) ] || { echo "sw get: \$src is \$((kb / 1024)) MB, over SW_MAX_MB=$MAX_MB. Use Globus or Open OnDemand."; exit 2; }
+echo __SW_DATA__
+tar czf - -C "\$(dirname "\$src")" "\$(basename "\$src")" | base64
+echo __SW_DATA_END__
+EOF
+    "$0" run 600 "$script" > "$out"; rc=$?
+    if [ $rc -ne 0 ]; then cat "$out" >&2; exit $rc; fi
+    mkdir -p "$dest"
+    awk '/^__SW_DATA__$/{on=1;next} /^__SW_DATA_END__$/{on=0} on' "$out" | b64decode | tar xzf - -C "$dest" \
+      && echo "get: $(basename "$src") -> $dest/$(basename "$src")"
+    exit $?
+    ;;
+esac
 
 # ---- Windows: forward into WSL ------------------------------------------------------------------
 case "$(uname -s)" in
   MINGW*|MSYS*|CYGWIN*)
     export MSYS_NO_PATHCONV=1
     distro=(); [ -n "${SW_WSL_DISTRO:-}" ] && distro=(-d "$SW_WSL_DISTRO")
-    self=$(wsl.exe "${distro[@]}" --exec wslpath -u "$(cygpath -w "$0")" < /dev/null | tr -d '\0\r')
+    to_wsl() { wsl.exe "${distro[@]}" --exec wslpath -u "$(cygpath -w "$1")" < /dev/null | tr -d '\0\r'; }
+    self=$(to_wsl "$0")
     [ -n "$self" ] || { echo "sw: WSL is needed on Windows and did not respond (try: wsl --shutdown)" >&2; exit 3; }
+    envs=(SW_HOST="${SW_HOST:-seawulf}" SW_MAX_MB="$MAX_MB")
+    [ -n "${SW_STATE:-}" ] && envs+=(SW_STATE="$SW_STATE")
     if [ "${1:-}" = run ]; then
       # pass the script through a file: stdin and multi-line arguments do not survive wsl.exe reliably
       tmp=$(mktemp "${TMPDIR:-/tmp}/sw.XXXXXX"); trap 'rm -f "$tmp"' EXIT
       if [ -n "${3:-}" ]; then cat "$3" > "$tmp"; else cat > "$tmp"; fi
       sed -i 's/\r$//' "$tmp"
-      wsl.exe "${distro[@]}" --exec env SW_HOST="${SW_HOST:-seawulf}" ${SW_STATE:+SW_STATE="$SW_STATE"} \
-        bash "$self" run "${2:-600}" "$(wsl.exe "${distro[@]}" --exec wslpath -u "$(cygpath -w "$tmp")" < /dev/null | tr -d '\0\r')" \
-        < /dev/null | tr -d '\0'
+      wsl.exe "${distro[@]}" --exec env "${envs[@]}" bash "$self" run "${2:-600}" "$(to_wsl "$tmp")" < /dev/null | tr -d '\0'
       exit "${PIPESTATUS[0]}"
     fi
-    wsl.exe "${distro[@]}" --exec env SW_HOST="${SW_HOST:-seawulf}" ${SW_STATE:+SW_STATE="$SW_STATE"} \
-      bash "$self" "$@" < /dev/null | tr -d '\0'
+    wsl.exe "${distro[@]}" --exec env "${envs[@]}" bash "$self" "$@" < /dev/null | tr -d '\0'
     exit "${PIPESTATUS[0]}"
     ;;
 esac
 
 # ---- macOS / Linux / WSL --------------------------------------------------------------------------
+umask 077                           # the queue and log hold commands and output: keep them private
 HOST=${SW_HOST:-seawulf}
 D=${SW_STATE:-$HOME/.seawulf-session}
-mkdir -p "$D"
-alive() { [ -f "$D/pid" ] && kill -0 "$(cat "$D/pid")" 2>/dev/null; }
+mkdir -p "$D"; chmod 700 "$D"
+ROTATE_BYTES=$((20 * 1024 * 1024))  # trim the queue and log once a run has finished past this size
 
-wait_for() {  # wait_for MARKER SECS -> 0 found, 1 timed out, 2 session gone
+alive() { [ -f "$D/pid" ] && kill -0 "$(cat "$D/pid")" 2> /dev/null; }
+
+wait_for() {  # wait_for MARKER SECS -> 0 found, 1 timed out, 2 session ended
   local end=$((SECONDS + $2))
   while [ $SECONDS -lt "$end" ]; do
-    grep -q -- "$1" "$D/out.log" 2>/dev/null && return 0
+    grep -q -- "$1" "$D/out.log" 2> /dev/null && return 0
     alive || return 2
     sleep 1
   done
   return 1
 }
 
+size_of() { wc -c < "$1" 2> /dev/null | tr -d ' '; }
+
 case "${1:-}" in
   start)
     if alive; then echo "session already open"; exit 0; fi
+    pkill -f "tail -n0 -F $D/queue" 2> /dev/null
     : > "$D/queue"; : > "$D/out.log"
+    # `exec ssh` makes the recorded pid ssh's own, so the session counts as ended the moment ssh exits.
     # BatchMode: never prompt here. The password is typed by the user in their own `ssh` login
-    # (ControlMaster); this session rides on that connection and only needs the Duo push.
+    # (ControlMaster) or replaced by a key; this session then costs only its Duo push.
     detach=(); command -v setsid > /dev/null && detach=(setsid)   # macOS has no setsid; nohup is enough there
-    nohup "${detach[@]}" bash -c "tail -n0 -F '$D/queue' 2>/dev/null | ssh -T -o BatchMode=yes -o ServerAliveInterval=60 '$HOST' 'bash -l -s' >> '$D/out.log' 2>&1" \
+    nohup "${detach[@]}" bash -c "exec ssh -T -o BatchMode=yes -o ServerAliveInterval=60 '$HOST' 'bash -l -s' < <(tail -n0 -F '$D/queue' 2> /dev/null) >> '$D/out.log' 2>&1" \
       < /dev/null > /dev/null 2>&1 &
     echo $! > "$D/pid"
     sleep 1
@@ -75,7 +130,7 @@ case "${1:-}" in
     echo "Duo push sent to the user's phone; waiting up to 120 s for approval..."
     if wait_for __SW_READY__ 120; then echo "session open"; exit 0; fi
     echo "session did not open. Last lines from ssh:"; tail -5 "$D/out.log"
-    echo "Usual causes: Duo not approved in time; no open \`ssh $HOST\` login (password) for this session to reuse."
+    echo "Usual causes: Duo not approved in time; no open \`ssh $HOST\` login (password) or key for this session to use."
     "$0" stop > /dev/null; exit 1
     ;;
   run)
@@ -96,15 +151,20 @@ case "${1:-}" in
     rm -f "$script"
     wait_for "__SW_END_${id}__" "$secs"; w=$?
     awk -v b="__SW_BEGIN_${id}__" -v e="__SW_END_${id}__" '$0==b{on=1;next} index($0,e)==1{on=0} on' "$D/out.log"
-    [ $w = 1 ] && { echo "sw: still running after ${secs}s; it keeps running on the cluster" >&2; exit 124; }
-    [ $w = 2 ] && { echo "sw: the session closed" >&2; exit 3; }
+    if [ $w = 1 ]; then echo "sw: still running after ${secs}s; it keeps running on the cluster (check later, don't rerun)" >&2; exit 124; fi
+    if [ $w = 2 ]; then echo "sw: the session ended (sleep, network change, or logout); ask the user before 'sw start'" >&2; exit 3; fi
     rc=$(grep -- "__SW_END_${id}__" "$D/out.log" | awk '{print $2}')
+    # Everything queued so far has been read and answered, so both files can be trimmed safely.
+    if [ "$(size_of "$D/out.log")" -gt $ROTATE_BYTES ] || [ "$(size_of "$D/queue")" -gt $ROTATE_BYTES ]; then
+      : > "$D/out.log"; : > "$D/queue"
+    fi
     exit "${rc:-1}"
     ;;
   status) if alive; then echo "session open"; else echo "no session"; exit 1; fi ;;
   stop)
-    if alive; then pkill -P "$(cat "$D/pid")" 2>/dev/null; kill "$(cat "$D/pid")" 2>/dev/null; fi
+    alive && kill "$(cat "$D/pid")" 2> /dev/null
+    pkill -f "tail -n0 -F $D/queue" 2> /dev/null
     rm -f "$D/pid"; echo "session closed"
     ;;
-  *) sed -n '2,22p' "$0"; exit 1 ;;
+  *) sed -n '2,29p' "$0"; exit 1 ;;
 esac

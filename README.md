@@ -98,9 +98,10 @@ To offer the plugin to everyone who opens a project, commit this to the project'
 | [`references/verified-facts.md`](skills/seawulf/references/verified-facts.md) | Every fact with its source and date |
 | [`templates/`](skills/seawulf/templates/) | Shared-CPU, A100 and array job scripts, validated on the cluster |
 | [`scripts/preflight.sh`](skills/seawulf/scripts/preflight.sh) | Checks your local setup and says what's missing (no Duo) |
-| [`scripts/sw`](skills/seawulf/scripts/sw) | The one-session runner (macOS, Linux, WSL; forwards from Git Bash) |
+| [`scripts/sw`](skills/seawulf/scripts/sw) | The one-session runner: `start`, `run`, `put`/`get` files, `stop` (macOS, Linux, WSL; forwards from Git Bash) |
 | [`scripts/cluster-facts.sh`](skills/seawulf/scripts/cluster-facts.sh) | Current queues, limits, down nodes, your accounts, quotas, modules and jobs |
 | [`evals/`](evals/) | Test cases for Claude's behaviour with the skill |
+| [`CHANGELOG.md`](CHANGELOG.md) | What changed in each release |
 
 ## Testing
 

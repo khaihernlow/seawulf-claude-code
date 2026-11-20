@@ -1,6 +1,6 @@
 {
   "name": "seawulf",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Teaches Claude Code to work on Stony Brook University's HPC clusters (SeaWulf, NVwulf): connecting through Duo safely, Slurm jobs and queues, A100 GPUs, conda/modules, storage and data, with verified, dated facts.",
   "author": {
     "name": "Khai Hern Low",

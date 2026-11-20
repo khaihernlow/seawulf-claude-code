@@ -1,0 +1,57 @@
+name: check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Shell scripts and job templates (shellcheck, bash -n)
+        run: |
+          shellcheck -S warning skills/seawulf/scripts/sw skills/seawulf/scripts/*.sh
+          shellcheck -S warning -s bash skills/seawulf/templates/*.sbatch
+          for f in skills/seawulf/scripts/sw skills/seawulf/scripts/*.sh skills/seawulf/templates/*.sbatch; do bash -n "$f"; done
+
+      - name: Manifests are valid JSON
+        run: for f in .claude-plugin/*.json; do python3 -m json.tool "$f" > /dev/null && echo "ok $f"; done
+
+      - name: Relative links in Markdown point at files that exist
+        run: |
+          python3 - <<'EOF'
+          import pathlib, re, sys
+          bad = []
+          for md in pathlib.Path(".").rglob("*.md"):
+              if "evals/results" in str(md):
+                  continue
+              for target in re.findall(r"\]\(([^)#\s]+)", md.read_text(encoding="utf-8")):
+                  if not target.startswith(("http://", "https://", "mailto:")) and not (md.parent / target).exists():
+                      bad.append(f"{md}: {target}")
+          print("\n".join(bad) or "all relative links resolve")
+          sys.exit(1 if bad else 0)
+          EOF
+
+      - name: SKILL.md frontmatter within limits
+        run: |
+          python3 - <<'EOF'
+          import re, sys
+          s = open("skills/seawulf/SKILL.md", encoding="utf-8").read()
+          name = re.search(r"^name: (.+)$", s, re.M).group(1)
+          desc = re.search(r"^description: (.+)$", s, re.M).group(1)
+          body_lines = s.split("---", 2)[2].count("\n")
+          problems = []
+          if not re.fullmatch(r"[a-z0-9-]{1,64}", name): problems.append(f"name {name!r} must be lowercase/digits/hyphens, <= 64")
+          if len(desc) > 1024: problems.append(f"description is {len(desc)} chars (max 1024)")
+          if body_lines > 500: problems.append(f"SKILL.md body is {body_lines} lines (keep under 500)")
+          print("\n".join(problems) or f"name ok, description {len(desc)} chars, body {body_lines} lines")
+          sys.exit(1 if problems else 0)
+          EOF
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - name: Claude Code plugin validator
+        run: npx -y @anthropic-ai/claude-code plugin validate .
