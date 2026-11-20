@@ -61,7 +61,7 @@ module load anaconda/3
 conda activate /gpfs/home/$USER/envs/myproject
 ```
 
-Some setups need `source "$(conda info --base)/etc/profile.d/conda.sh"` before `conda activate` in a non-interactive shell; batch login shells usually work without it. A plain `python -m venv` on a module Python (`module load python/3.12.0`) works too, with the same placement rules.
+This worked in a batch job on 2026-11-20 with no other setup (`module load anaconda/3`, then `conda activate <prefix>`). If `conda activate` ever complains that the shell isn't initialised, add `source "$(conda info --base)/etc/profile.d/conda.sh"` before it. `module load miniforge/3` (conda 26.1, with `mamba`) is the faster alternative to Anaconda. A plain `python -m venv` on a module Python (`module load python/3.12.0`) works too, with the same placement rules.
 
 ## 3. GPU Python (PyTorch, vLLM, ...)
 
@@ -74,7 +74,7 @@ Some setups need `source "$(conda info --base)/etc/profile.d/conda.sh"` before `
 
 - `singularity` (SingularityCE 4.5.1) is installed. There's no `apptainer` command.
 - `singularity exec --nv image.sif python ...` passes GPUs through.
-- Reported: `singularity pull docker://...` was killed (SIGKILL) while extracting large images. Build or pull inside a CPU job with more memory, or export the image with a tool like `crane` and build from that.
+- Small images pull fine on the login node (`singularity pull alpine.sif docker://alpine:3.20` took 6 s on 2026-11-20). Large images were reported to be killed (SIGKILL) during extraction, consistent with the 15 GB / 3-CPU per-user limit on login nodes. Pull large ones inside a CPU job, or export the image with a tool like `crane` and build from that.
 - Keep `.sif` files and the Singularity cache (`SINGULARITY_CACHEDIR`) out of home.
 
 ## 5. Notebooks and IDEs

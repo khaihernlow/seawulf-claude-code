@@ -22,7 +22,7 @@ Use this to take someone from "I have access to the university cluster" to worki
 1. **Never loop or retry connections.** Each new ssh session can send a Duo push, and unanswered pushes lock the account. If a command fails after about 60 seconds with no output, a push probably went unanswered: stop and tell the user.
 2. **Ask before anything that sends a push**, and say it's coming, so they can approve it.
 3. **Never ask for, type, store or log the user's password**, and never try to answer Duo. The user authenticates; Claude works through what they opened.
-4. **Nothing heavy on login nodes.** Builds, small installs, `git` and quick checks are fine. Anything long, multi-core or memory-hungry goes in a job.
+4. **Nothing heavy on login nodes.** Each user is capped there at **3 CPUs and 15 GB of memory** (enforced by the system), shared by everyone's work. Builds, small installs, `git` and quick checks are fine. Anything long, multi-core or memory-hungry (training, loading a model to try it, big compiles) goes in a job.
 5. **Never put environments or installed software in scratch** (the purge breaks them), and copy results worth keeping out of scratch.
 6. **Don't run anything twice that must run once** (above all `sbatch`). After an unclear failure, check the queue before resubmitting.
 7. **Only cancel jobs you started for this task, with the user's OK.**
@@ -35,6 +35,7 @@ Read [references/connecting.md](references/connecting.md) the first time. In sho
 | --- | --- |
 | On the **SBU VPN** (Duo once at VPN connect), or ssh connection reuse confirmed to not push per command | Plain `ssh seawulf '<command>'` |
 | Otherwise (the usual case; Windows needs WSL) | One long-lived session with **`scripts/sw`**: one Duo push, then no more. The user logs in once in their own terminal, then Claude runs `scripts/sw start` and approves nothing further |
+| The user would rather run Claude **on the cluster** | SeaWulf has Claude Code installed (`module load claude-code`). The user logs in (one Duo push) and runs `claude` on the login node, where commands are local, with the 3-CPU / 15 GB login limits. See connecting.md section 6 |
 | No ssh setup at all | The user runs Claude's one-line commands in the Open OnDemand shell ([sn-ood.seawulf.stonybrook.edu](https://sn-ood.seawulf.stonybrook.edu)) and pastes the output back |
 
 With `scripts/sw`:

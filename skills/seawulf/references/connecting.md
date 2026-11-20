@@ -89,7 +89,12 @@ Ask the user which applies, in this order of preference:
    - Run commands with `scripts/sw run [SECS] <<'EOF' ... EOF`.
    - `scripts/sw status` / `stop`.
    - If the session drops (sleep, network, WSL restart), ask before `sw start` again.
-3. **No terminal setup at all:** the user works in Open OnDemand's shell and pastes Claude's one-line commands and their output back and forth. It's slow, but it needs nothing installed.
+3. **Claude Code on the cluster itself.** SeaWulf provides it as a module (`claude-code/2.1.207` on 2026-11-20; it also loads `node.js`):
+   - The user connects once (ssh or the OnDemand shell: one Duo push), then runs `module load claude-code`, starts a `tmux` session so a dropped connection doesn't kill it, and runs `claude` in their project folder in scratch.
+   - Commands are then local, with no per-command Duo, but Claude runs on the shared login node: **3 CPUs and 15 GB per user**, and everything heavy still goes through Slurm.
+   - Signing in to Claude on a machine without a browser, and whether the user's Claude plan allows it there, haven't been tested here.
+   - The local laptop's files and tools aren't available that way. Code should come in through git.
+4. **No terminal setup at all:** the user works in Open OnDemand's shell and pastes Claude's one-line commands and their output back and forth. It's slow, but it needs nothing installed.
 
 ## 7. Windows
 

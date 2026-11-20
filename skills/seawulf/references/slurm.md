@@ -83,7 +83,7 @@ srun -p a100 --gres=gpu:1 -c 8 --mem=60G --time=01:00:00 --pty bash         # on
 
 `--pty bash` goes last. `exit` releases the node; always exit when done. The session dies if the connection drops, so long work belongs in a batch job. If it hangs without "job has been allocated resources", the queue is busy: ask for less, or use a shared queue.
 
-**Claude can't drive an interactive `srun` shell through a non-interactive connection.** For Claude's own work, prefer batch jobs, or `srun` with a command instead of a shell: `srun -p short-40core-shared -n 1 --mem=4G -t 10 python check.py`. That blocks until done, so keep it short.
+**Claude can't drive an interactive `srun` shell through a non-interactive connection.** For Claude's own work, prefer batch jobs, or `srun` with a command instead of a shell: `srun -p short-40core-shared -n 1 --mem=4G -t 10 python check.py`. That blocks until done (on an idle shared queue it took ~1.5 s end to end on 2026-11-20), so keep it short. It's handy for quick checks on a compute node, like testing an import or network access.
 
 ## 7. Arrays and dependencies
 

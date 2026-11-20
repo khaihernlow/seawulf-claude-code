@@ -26,8 +26,14 @@ cluster's own answer is used and the disagreement is noted. Refresh with `script
 | Never build envs/software in scratch; never install into conda base | Docs |
 | Modules: CUDA up to `cuda133/toolkit/13.3`, cudnn 9.12, `anaconda/3` (default 3-new), `miniforge/3`, `python/3.14.6`, gcc to 13.2, `jupyter`, `globus`, `claude-code` | Verified (`module -t avail`, milan) |
 | SingularityCE 4.5.1; no apptainer | Verified |
-| `singularity pull` of a large Docker image SIGKILLed on extraction | Reported |
-| Login node reaches GitHub; compute nodes reach huggingface.co and pypi.org | Verified 2026-11-20 |
+| `singularity pull` of a large Docker image SIGKILLed on extraction (likely the 15 GB login limit) | Reported |
+| Login node reaches GitHub; compute nodes reach github.com, huggingface.co and pypi.org | Verified 2026-11-20 |
+| Login node per-user limits: 3 CPUs (`cpu.max 300000 100000`) and 15 GiB memory (`memory.max`), enforced by cgroup; the node has 128 cores / 503 GB shared | Verified 2026-11-20 (`/sys/fs/cgroup/user.slice/user-$UID.slice`) |
+| Claude Code available as a module (`claude-code/2.1.42`, `2.1.49`, `2.1.207`; loads `node.js/24.4.1`) | Verified 2026-11-20 (`claude --version`); signing in on the cluster untested |
+| `srun ... <command>` runs non-interactively and blocks until done | Verified 2026-11-20 |
+| `conda activate <prefix>` works in a batch job after `module load anaconda/3`, without sourcing conda.sh | Verified 2026-11-20 |
+| `miniforge/3` provides conda 26.1.1 and mamba | Verified 2026-11-20 |
+| Small `singularity pull` works on the login node | Verified 2026-11-20 (alpine, 6 s) |
 | `sbatch` can print "Socket timed out" and still create the job | Reported |
 | OnDemand at sn-ood.seawulf.stonybrook.edu (Jupyter on CPU nodes, RStudio, MATLAB, code-server, vLLM/Ollama apps) | Docs |
 | NVwulf queues, hosts and hardware | Docs only (not accessed) |
