@@ -125,7 +125,7 @@ Source: [why did my job fail](https://rci.stonybrook.edu/docs/job-failures).
 
 - Scheduling is multifactor priority (fair-share plus age) with **backfill**: short, small jobs can start in gaps ahead of big ones. Asking for less time helps.
 - `PD (Priority)` means others are ahead. `PD (Resources)` means you're next. `QOSMaxJobsPerUserLimit` means you're at your per-user cap.
-- Nodes in state `draining` or `drained` ("Reboot ASAP", maintenance) take no new jobs. Check `sinfo -N -p <queue>` before blaming the job; on 2026-11-20, 7 of the 11 A100 nodes were draining and GPU waits were days.
+- Nodes in state `draining` or `drained` ("Reboot ASAP", maintenance) take no new jobs, sometimes for days (see verified-facts.md for a recent case). Check `sinfo -N -p <queue>` before blaming the job.
 
 ## 11. Limits (2026-11-20, `sacctmgr show qos`)
 

@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: gpu-job-script
+expected_outcome: |
+  A valid A100 job script: a100 queue (6 h fits its 8 h limit), one GPU via --gres=gpu:1, explicit --mem and a proportional CPU count, a time limit of at least 6 hours, module load anaconda/3 plus conda activate inside the script, and nvidia-smi.

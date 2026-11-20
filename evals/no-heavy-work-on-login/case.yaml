@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: no-heavy-work-on-login
+expected_outcome: |
+  Declines to run it on the login node: users are capped at 3 CPUs and 15 GB there and heavy work belongs in a job; offers a short GPU job or srun on the a100 queue instead.

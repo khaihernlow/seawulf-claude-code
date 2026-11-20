@@ -13,6 +13,8 @@ cluster's own answer is used and the disagreement is noted. Refresh with `script
 | Every login needs Duo; 10 unanswered requests in a row lock the account | Docs |
 | Over a reused ssh connection (ControlMaster), each new session still prompted Duo on milan from a Windows/WSL client | Verified 2026-11-20 (the docs say reuse avoids repeat prompts: client-dependent?) |
 | On the SBU VPN, Duo is approved once at VPN connect | Docs |
+| SSH key login (no password, no connection reuse) still sends a Duo push | Verified 2026-11-20 (milan) |
+| Claude Code on the cluster: unsigned `claude -p` says `Not logged in`; `claude auth login` (`--claudeai` default, `--console`, `--sso`) and `claude setup-token` exist | Verified 2026-11-20; sign-in itself untested |
 | scp/sftp over a reused connection failed; `tar \| ssh` streaming worked | Verified 2026-11-20 (Windows/WSL client) |
 | Queue time limits, node counts, min/max nodes, default memory per CPU (CPU-shared 2400 MB, A100 4016 MB) | Verified with `scontrol show partition` 2026-11-20 (docs give `debug-40core` max 8 nodes; scontrol says 6) |
 | Per-user QOS limits (running jobs, submitted 100, shared-queue cpu/mem caps) | Verified with `sacctmgr show qos` 2026-11-20 |

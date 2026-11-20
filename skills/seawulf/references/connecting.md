@@ -59,7 +59,7 @@ Host seawulf
 
 Then `export DUO_PASSCODE=push` in the shell profile. Add `ForwardX11 yes` only for graphical programs (Mac: XQuartz).
 
-**SSH keys** (RCI recommends them) remove the password step. Duo may still ask:
+**SSH keys** (RCI recommends them) remove the password step. **They don't remove Duo:** a key-only login on milan still sent a push (tested 2026-11-20). Set one up like this:
 
 ```
 ssh-keygen -t ed25519 -C "<netid>@seawulf"          # set a passphrase
@@ -84,7 +84,7 @@ Ask the user which applies, in this order of preference:
 
 1. **On the SBU VPN, or connection reuse confirmed to work** (no push per command): run `ssh seawulf '<command>'` directly. Still never loop on failures.
 2. **Otherwise: one long-lived session with `scripts/sw`** (one push per session, then none):
-   - The user logs in once in their own terminal (`ssh seawulf`) and keeps it open. With ControlMaster, the session reuses that authenticated connection; with keys, that step is optional.
+   - The user logs in once in their own terminal (`ssh seawulf`) and keeps it open. With ControlMaster, the session reuses that authenticated connection. With a key, that first login is optional, but `sw start` still sends its own push either way.
    - Tell the user a push is coming, then run `scripts/sw start`.
    - Run commands with `scripts/sw run [SECS] <<'EOF' ... EOF`.
    - `scripts/sw status` / `stop`.
@@ -92,7 +92,7 @@ Ask the user which applies, in this order of preference:
 3. **Claude Code on the cluster itself.** SeaWulf provides it as a module (`claude-code/2.1.207` on 2026-11-20; it also loads `node.js`):
    - The user connects once (ssh or the OnDemand shell: one Duo push), then runs `module load claude-code`, starts a `tmux` session so a dropped connection doesn't kill it, and runs `claude` in their project folder in scratch.
    - Commands are then local, with no per-command Duo, but Claude runs on the shared login node: **3 CPUs and 15 GB per user**, and everything heavy still goes through Slurm.
-   - Signing in to Claude on a machine without a browser, and whether the user's Claude plan allows it there, haven't been tested here.
+   - Unsigned, `claude -p` answers `Not logged in · Please run /login`. The user signs in once with `claude auth login` (Claude subscription by default; `--console` for API billing), or `claude setup-token` for a long-lived token on a subscription. On a machine without a browser, login normally shows a link to open on the laptop. The full sign-in on the cluster hasn't been tested here. The login is stored in the user's SeaWulf home (`~/.claude`).
    - The local laptop's files and tools aren't available that way. Code should come in through git.
 4. **No terminal setup at all:** the user works in Open OnDemand's shell and pastes Claude's one-line commands and their output back and forth. It's slow, but it needs nothing installed.
 

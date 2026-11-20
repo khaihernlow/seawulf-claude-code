@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: check-jobs-without-duo-spam
+expected_outcome: |
+  Plans to check jobs through one long-lived session (scripts/sw) or plain ssh only if the user is on the VPN; warns that starting the session sends one Duo push; never plans repeated or retried ssh connections.

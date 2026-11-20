@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: env-not-in-scratch
+expected_outcome: |
+  Pushes back on scratch: RCI says never build envs in scratch because files untouched for 45 days are deleted. Proposes home (20 GB) or group project space for the env, keeping caches in scratch, and a separate env for vLLM.
