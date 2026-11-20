@@ -1,0 +1,22 @@
+[
+  {"should_trigger": true, "query": "my sbatch job on seawulf has been PD for 6 hours with reason Priority, is something wrong with my script or is the cluster just busy?"},
+  {"should_trigger": true, "query": "I just got a SeaWulf account from my PI (project number in the email). how do I actually connect and run my first python script there?"},
+  {"should_trigger": true, "query": "need to finetune a 7B model on the university GPUs at stony brook, the A100s. what's the right way to set up the env and submit it"},
+  {"should_trigger": true, "query": "can you check whether my jobs on the cluster finished? it's seawulf, milan login node"},
+  {"should_trigger": true, "query": "my job died with OUT_OF_MEMORY on short-40core-shared, how much --mem should I ask for next time"},
+  {"should_trigger": true, "query": "where should I put a conda env on seawulf? home is only 20gb and scratch has tons of space"},
+  {"should_trigger": true, "query": "how do I get access to NVwulf and the H200 nodes for my research group at SBU?"},
+  {"should_trigger": true, "query": "copy my results folder from /gpfs/scratch/jdoe/run7 back to my laptop, it's on seawulf"},
+  {"should_trigger": true, "query": "every time you run a command on the stony brook HPC my phone gets a duo push, can we stop that"},
+  {"should_trigger": true, "query": "set up a job array on seawulf to run my simulation over 200 parameter files, at most 20 at a time"},
+  {"should_trigger": false, "query": "write a slurm script for perlmutter at NERSC that requests 4 A100s for 12 hours"},
+  {"should_trigger": false, "query": "explain the difference between sbatch, srun and salloc in slurm in general terms"},
+  {"should_trigger": false, "query": "my pytorch training on my own RTX 4090 runs out of CUDA memory at batch size 64, how do I fix it"},
+  {"should_trigger": false, "query": "set up an AWS g5.xlarge instance with a GPU to run CARLA, what AMI should I pick"},
+  {"should_trigger": false, "query": "how do I register for CSE 416 at stony brook, the waitlist is full"},
+  {"should_trigger": false, "query": "I keep getting Duo pushes when logging into my stony brook email on my phone, how do I set up a new phone for Duo"},
+  {"should_trigger": false, "query": "our lab's kubernetes cluster keeps evicting my GPU pods, how do I set resource requests properly"},
+  {"should_trigger": false, "query": "write a bash script that rsyncs my project folder to my raspberry pi over ssh every night"},
+  {"should_trigger": false, "query": "what's a good name for a sea wolf themed robotics team at my high school"},
+  {"should_trigger": false, "query": "on the Frontera supercomputer at TACC, which queue should I use for a 2 hour 4 core job"}
+]

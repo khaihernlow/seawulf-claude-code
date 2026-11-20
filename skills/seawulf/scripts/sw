@@ -6,7 +6,8 @@
 # Cost: one Duo approval per `sw start`.
 #
 #   sw start                   open the session (sends ONE Duo push; waits up to 120 s for approval)
-#   sw run [SECS] [< FILE]     run a bash script (stdin or FILE) there; prints its output; exits with its status
+#   sw run [SECS] [< FILE]     run a bash script (stdin or FILE) there, stopped after SECS (default 600);
+#                              prints its output; exits with its status (124 = stopped at the limit)
 #   sw put LOCAL REMOTE_DIR    copy a local file or folder into REMOTE_DIR (created if needed)
 #   sw get REMOTE LOCAL_DIR    copy a remote file or folder into LOCAL_DIR
 #   sw status                  is a session open?
@@ -145,15 +146,21 @@ case "${1:-}" in
       echo "cat > \"\$f\" <<'__SW_EOF_${id}__'"
       cat "$script"
       echo "__SW_EOF_${id}__"
-      echo "bash \"\$f\" < /dev/null 2>&1; rc=\$?; rm -f \"\$f\""
+      # The session runs one script at a time, so each is stopped on the cluster after SECS: a stuck
+      # command (e.g. an srun waiting for a free node) can't hold up everything queued after it.
+      echo "timeout --kill-after=15 ${secs} bash \"\$f\" < /dev/null 2>&1; rc=\$?; rm -f \"\$f\""
       echo "echo __SW_END_${id}__ \$rc"
     } >> "$D/queue"
     rm -f "$script"
-    wait_for "__SW_END_${id}__" "$secs"; w=$?
+    # wait a little longer than the cluster-side limit, so its exit status arrives (also covers earlier queued scripts)
+    wait_for "__SW_END_${id}__" $((secs + 60)); w=$?
     awk -v b="__SW_BEGIN_${id}__" -v e="__SW_END_${id}__" '$0==b{on=1;next} index($0,e)==1{on=0} on' "$D/out.log"
-    if [ $w = 1 ]; then echo "sw: still running after ${secs}s; it keeps running on the cluster (check later, don't rerun)" >&2; exit 124; fi
+    if [ $w = 1 ]; then echo "sw: no reply after $((secs + 60))s: earlier commands may still be running in the session; check again with a quick 'sw run'" >&2; exit 125; fi
     if [ $w = 2 ]; then echo "sw: the session ended (sleep, network change, or logout); ask the user before 'sw start'" >&2; exit 3; fi
     rc=$(grep -- "__SW_END_${id}__" "$D/out.log" | awk '{print $2}')
+    if [ "$rc" = 124 ] || [ "$rc" = 137 ]; then
+      echo "sw: stopped on the cluster after ${secs}s (sw run's limit). For long work use sbatch, or give a larger SECS." >&2
+    fi
     # Everything queued so far has been read and answered, so both files can be trimmed safely.
     if [ "$(size_of "$D/out.log")" -gt $ROTATE_BYTES ] || [ "$(size_of "$D/queue")" -gt $ROTATE_BYTES ]; then
       : > "$D/out.log"; : > "$D/queue"
@@ -166,5 +173,5 @@ case "${1:-}" in
     pkill -f "tail -n0 -F $D/queue" 2> /dev/null
     rm -f "$D/pid"; echo "session closed"
     ;;
-  *) sed -n '2,29p' "$0"; exit 1 ;;
+  *) sed -n '2,30p' "$0"; exit 1 ;;
 esac

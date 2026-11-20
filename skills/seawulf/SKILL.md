@@ -12,6 +12,17 @@ SeaWulf is SBU's main cluster:
 
 NVwulf is a separate GPU cluster (H200 / Blackwell). Many users are new to HPC: explain each choice in a plain sentence ("a shared queue, since you need 4 cores; it starts sooner than a whole node").
 
+## Numbers used most (details and sources in the references)
+
+| | |
+| --- | --- |
+| Small CPU jobs | `short-40core-shared` / `short-96core-shared`: up to 4 h, part of a node. **Set `--mem`**: the default is only ~2.4 GB per core |
+| Whole nodes | `short-*` 4 h · `medium-*` 12 h (6+ nodes) · `long-*` 2 days · `extended-*` 7 days. 40-core nodes 192 GB, 96-core nodes 256 GB |
+| GPUs | `a100` (8 h) / `a100-long` (2 days): `--gres=gpu:N`, N ≤ 4. Per GPU ask ≤ 16 cores and ~60 GB `--mem` (default ~4 GB per core). 2 running jobs per user |
+| Login node | 3 CPUs and 15 GB per user |
+| Storage | home 20 GB (backed up) · scratch 20 TB, purged after 45 days · project space up to 10 TB (PI requests) |
+| Conda in a job | `module load anaconda/3` then `conda activate /path/to/env`, inside the script. This works in batch jobs (verified). Don't swap it for a `PATH` hack: activation also sets library paths that packages like CUDA libraries rely on |
+
 ## Rules that protect the user
 
 1. **Every new ssh connection asks for Duo, even with SSH keys**, and **10 unanswered requests in a row lock the account.** So never loop or retry a connection. A command that fails after ~60 s with no output was probably an unanswered push: stop and tell the user.
@@ -51,7 +62,7 @@ EOF
 "$SW" stop                  # when done
 ```
 
-`run` exit 124 means the script is still running on the cluster after the wait: check later, don't rerun. Exit 3 means the session ended: ask before starting another. Setup details, keys, Windows and troubleshooting: [references/connecting.md](references/connecting.md).
+The session runs one command at a time, and `sw run` stops a command on the cluster after SECS (exit 124), so nothing blocks the session for long. So keep `sw run` for quick work: long installs, training and anything waiting on the queue go in `sbatch` (or a blocking `srun` given a short SECS). Exit 3 means the session ended: ask before starting another. Setup details, keys, Windows and troubleshooting: [references/connecting.md](references/connecting.md).
 
 ## 2. Get current facts
 

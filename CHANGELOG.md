@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0 (2026-11-20)
+
+- `sw run` stops a command on the cluster after its SECS limit (exit 124), so one slow command (such as an `srun` waiting for a busy queue) can't block every later command in the session.
+- `SKILL.md` gains a "Numbers used most" table (queues, default memory, GPU slices, login-node and storage limits, conda in jobs), after Haiku runs showed smaller models don't always open the references.
+- GPU template activates the conda env explicitly (`module load anaconda/3`, `conda activate`).
+- The four ways to work (laptop session, VPN, Claude Code on SeaWulf, OnDemand shell) are presented as options, not ranked; the skill notices when it is already running on a SeaWulf login node.
+- Evals: login-node case tightened, queue-choice case added, Haiku results, and a trigger check (`evals/triggering/`, 20/20).
+
 ## 0.4.0 (2026-11-20)
 
 - `sw put` / `sw get`: copy files and folders (up to 50 MB, `SW_MAX_MB`) through the open session. No scp, no extra Duo push; binary-safe, checksums verified both ways.

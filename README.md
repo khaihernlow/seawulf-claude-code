@@ -126,16 +126,27 @@ To offer the plugin to everyone who opens a project, commit this to the project'
 
 ## Testing
 
-[`evals/`](evals/) holds five cases that check what matters most:
-- no connection spam;
-- correct A100 scripts;
-- diagnosing out-of-memory jobs;
-- keeping envs out of scratch;
-- refusing heavy work on login nodes.
+**Behaviour:** [`evals/`](evals/) has six cases, each run three times with and without the plugin and graded on
+what Claude actually did (`claude plugin eval . --allow-tools Write`). Pass rates on 2026-11-20:
 
-They only let Claude read and write files, so running them never touches the cluster or sends a Duo push. Run
-them (with and without the plugin) using `claude plugin eval . --allow-tools Write`. These are real, billed
-model runs.
+| Case | Default model: with / without | Haiku: with / without |
+| --- | --- | --- |
+| Checks jobs without a Duo push per command | 100% / 56% | 100% / 44% |
+| Keeps conda envs out of purged scratch | 100% / 50% | 83% / 0% |
+| Writes a correct A100 job script | 100% / 67% | 75% / 50% |
+| Diagnoses an OUT_OF_MEMORY job | 100% / 83% | 83% / 50% |
+| Refuses heavy work on the login node | 100% / 100% (since tightened) | 89% / 0% |
+| Picks a queue for a small job | 100% / 100% | 100% / 58% |
+
+Haiku's misses led to the "Numbers used most" table and the explicit conda lines now in `SKILL.md` and the GPU
+template.
+
+**Triggering:** [`evals/triggering/`](evals/triggering/) checks that the skill activates for SeaWulf requests and
+stays quiet for near-misses (Slurm on other clusters, a personal GPU, Duo for email, course registration). Claude
+runs with only the Skill tool, so nothing touches the cluster. Result: 20/20 correct.
+
+Both kinds are real, billed model runs (about $3 for the default model, under $1 for Haiku, about $1 for
+triggering), and none of them connect to SeaWulf or send Duo pushes.
 
 ## Contributing
 
