@@ -1,0 +1,12 @@
+{
+  "name": "seawulf-claude-code",
+  "owner": {"name": "Khai Hern Low", "url": "https://github.com/khaihernlow"},
+  "description": "Claude Code plugins for Stony Brook University's SeaWulf HPC cluster.",
+  "plugins": [
+    {
+      "name": "seawulf",
+      "source": "./",
+      "description": "Use Stony Brook University's SeaWulf HPC cluster from Claude Code without a Duo push per command."
+    }
+  ]
+}

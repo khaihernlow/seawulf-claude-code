@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+# sw: run commands on SeaWulf through ONE long-lived ssh session.
+#
+# SeaWulf asks for Duo on every new ssh session, even one multiplexed over an existing connection.
+# So instead of one ssh per command (one phone push per command), this keeps a single session open and
+# streams commands into it. Cost: one Duo approval per `sw start`.
+#
+#   sw start              open the session (sends ONE Duo push; waits up to 120 s for approval)
+#   sw run [SECS] < FILE  run a bash script (from stdin or FILE) there; prints its output; exits with its status
+#   sw status             is a session open?
+#   sw stop               close it
+#
+# Each script runs in its own `bash` on the cluster with stdin from /dev/null, so `exit`, `cd` or `set -e`
+# in one script can't end or change the session. Output is cut out of the session log between markers.
+#
+# Settings (environment):
+#   SW_HOST        ssh host alias (default: seawulf). Set it up as in references/setup.md.
+#   SW_STATE       local state directory (default: ~/.seawulf-session)
+#   SW_WSL_DISTRO  Windows only: WSL distribution to use (default: the default distribution)
+#
+# On Windows (Git Bash / MSYS), this script re-runs itself inside WSL, where ssh can hold a session open.
+set -u
+
+# ---- Windows: forward into WSL ------------------------------------------------------------------
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*)
+    export MSYS_NO_PATHCONV=1
+    distro=(); [ -n "${SW_WSL_DISTRO:-}" ] && distro=(-d "$SW_WSL_DISTRO")
+    self=$(wsl.exe "${distro[@]}" --exec wslpath -u "$(cygpath -w "$0")" < /dev/null | tr -d '\0\r')
+    [ -n "$self" ] || { echo "sw: WSL is needed on Windows and did not respond (try: wsl --shutdown)" >&2; exit 3; }
+    if [ "${1:-}" = run ]; then
+      # pass the script through a file: stdin and multi-line arguments do not survive wsl.exe reliably
+      tmp=$(mktemp "${TMPDIR:-/tmp}/sw.XXXXXX"); trap 'rm -f "$tmp"' EXIT
+      if [ -n "${3:-}" ]; then cat "$3" > "$tmp"; else cat > "$tmp"; fi
+      sed -i 's/\r$//' "$tmp"
+      wsl.exe "${distro[@]}" --exec env SW_HOST="${SW_HOST:-seawulf}" ${SW_STATE:+SW_STATE="$SW_STATE"} \
+        bash "$self" run "${2:-600}" "$(wsl.exe "${distro[@]}" --exec wslpath -u "$(cygpath -w "$tmp")" < /dev/null | tr -d '\0\r')" \
+        < /dev/null | tr -d '\0'
+      exit "${PIPESTATUS[0]}"
+    fi
+    wsl.exe "${distro[@]}" --exec env SW_HOST="${SW_HOST:-seawulf}" ${SW_STATE:+SW_STATE="$SW_STATE"} \
+      bash "$self" "$@" < /dev/null | tr -d '\0'
+    exit "${PIPESTATUS[0]}"
+    ;;
+esac
+
+# ---- macOS / Linux / WSL --------------------------------------------------------------------------
+HOST=${SW_HOST:-seawulf}
+D=${SW_STATE:-$HOME/.seawulf-session}
+mkdir -p "$D"
+alive() { [ -f "$D/pid" ] && kill -0 "$(cat "$D/pid")" 2>/dev/null; }
+
+wait_for() {  # wait_for MARKER SECS -> 0 found, 1 timed out, 2 session gone
+  local end=$((SECONDS + $2))
+  while [ $SECONDS -lt "$end" ]; do
+    grep -q -- "$1" "$D/out.log" 2>/dev/null && return 0
+    alive || return 2
+    sleep 1
+  done
+  return 1
+}
+
+case "${1:-}" in
+  start)
+    if alive; then echo "session already open"; exit 0; fi
+    : > "$D/queue"; : > "$D/out.log"
+    # BatchMode: never prompt here. The password is typed by the user in their own `ssh` login
+    # (ControlMaster); this session rides on that connection and only needs the Duo push.
+    detach=(); command -v setsid > /dev/null && detach=(setsid)   # macOS has no setsid; nohup is enough there
+    nohup "${detach[@]}" bash -c "tail -n0 -F '$D/queue' 2>/dev/null | ssh -T -o BatchMode=yes -o ServerAliveInterval=60 '$HOST' 'bash -l -s' >> '$D/out.log' 2>&1" \
+      < /dev/null > /dev/null 2>&1 &
+    echo $! > "$D/pid"
+    sleep 1
+    echo 'echo __SW_READY__' >> "$D/queue"
+    echo "Duo push sent to the user's phone; waiting up to 120 s for approval..."
+    if wait_for __SW_READY__ 120; then echo "session open"; exit 0; fi
+    echo "session did not open. Last lines from ssh:"; tail -5 "$D/out.log"
+    echo "Usual causes: Duo not approved in time; no open \`ssh $HOST\` login (password) for this session to reuse."
+    "$0" stop > /dev/null; exit 1
+    ;;
+  run)
+    alive || { echo "sw: no session open. Ask the user, then run: sw start" >&2; exit 3; }
+    secs=${2:-600}
+    script=$(mktemp "${TMPDIR:-/tmp}/sw-script.XXXXXX")
+    if [ -n "${3:-}" ]; then cat "$3" > "$script"; else cat > "$script"; fi
+    id="$(date +%s)$$${RANDOM}"   # no %N on macOS
+    {
+      echo "echo __SW_BEGIN_${id}__"
+      echo "f=\$(mktemp)"
+      echo "cat > \"\$f\" <<'__SW_EOF_${id}__'"
+      cat "$script"
+      echo "__SW_EOF_${id}__"
+      echo "bash \"\$f\" < /dev/null 2>&1; rc=\$?; rm -f \"\$f\""
+      echo "echo __SW_END_${id}__ \$rc"
+    } >> "$D/queue"
+    rm -f "$script"
+    wait_for "__SW_END_${id}__" "$secs"; w=$?
+    awk -v b="__SW_BEGIN_${id}__" -v e="__SW_END_${id}__" '$0==b{on=1;next} index($0,e)==1{on=0} on' "$D/out.log"
+    [ $w = 1 ] && { echo "sw: still running after ${secs}s; it keeps running on the cluster" >&2; exit 124; }
+    [ $w = 2 ] && { echo "sw: the session closed" >&2; exit 3; }
+    rc=$(grep -- "__SW_END_${id}__" "$D/out.log" | awk '{print $2}')
+    exit "${rc:-1}"
+    ;;
+  status) if alive; then echo "session open"; else echo "no session"; exit 1; fi ;;
+  stop)
+    if alive; then pkill -P "$(cat "$D/pid")" 2>/dev/null; kill "$(cat "$D/pid")" 2>/dev/null; fi
+    rm -f "$D/pid"; echo "session closed"
+    ;;
+  *) sed -n '2,22p' "$0"; exit 1 ;;
+esac
