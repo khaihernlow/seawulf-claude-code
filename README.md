@@ -1,17 +1,17 @@
 # seawulf-claude-code
 
-A Claude Code plugin for working on Stony Brook University's **SeaWulf** HPC cluster: submitting and checking
-Slurm jobs, setting up environments, reading logs, all from Claude Code, **without a Duo push for every command**.
+A Claude Code plugin that teaches Claude to work on **Stony Brook University's HPC clusters**: SeaWulf,
+plus NVwulf for GPUs. Claude doesn't need to know anything about HPC beforehand, and neither do you.
+Install it, and Claude can:
 
-## Why
+- **connect** through Duo without spamming your phone or locking your account;
+- **run jobs:** pick the right queue, write and submit Slurm jobs (CPU, A100 GPU, arrays, dependencies), and work out why one failed or is waiting;
+- **set up software:** modules, conda/Python envs in the right place, CUDA/PyTorch/vLLM, containers;
+- **handle data:** quotas, the scratch purge, getting code and data on and off the cluster.
 
-SeaWulf asks for a Duo approval on every new ssh session, even over an already-open connection. An assistant
-that runs one `ssh` per command sends you a phone push per command, and anything you don't approve in time fails
-silently after about a minute. This plugin keeps **one** session open (one approval) and streams every command
-through it. Each command then takes a couple of seconds and costs no push.
-
-It works *with* Duo, never around it: you log in and approve every session yourself, and Claude never sees or
-stores your password.
+Everything is based on SBU Research Computing's documentation and on checks run on the cluster itself. Each
+fact is marked with how and when it was verified, and a bundled script lets Claude re-check the live cluster
+instead of trusting stale notes.
 
 ## Install
 
@@ -22,36 +22,45 @@ In Claude Code:
 /plugin install seawulf@seawulf-claude-code
 ```
 
-Then ask Claude to do something on SeaWulf. The skill walks you through the one-time setup:
-- an ssh `seawulf` entry in `~/.ssh/config`;
-- on Windows, WSL.
+Then just ask, e.g. *"set up a conda env with PyTorch on SeaWulf and run my train.py on an A100"*.
 
-See [setup](skills/seawulf/references/setup.md).
+## Connecting without a Duo push per command
 
-## Using it
+SeaWulf asks for Duo at every login, and **10 unanswered requests in a row lock your account**. An assistant
+running one `ssh` per command can trigger that quickly. The skill picks the cheapest safe way to connect:
 
-1. Log in yourself, in a terminal (inside WSL on Windows): `ssh seawulf`. Enter your password, answer Duo, and keep the window open.
-2. Ask Claude for SeaWulf work. It will tell you before it opens its session, which sends one more Duo push.
-3. From then on, commands run through that session. If it drops (sleep, network change), Claude asks before reopening it.
+1. **On the SBU VPN**, Duo is approved once when the VPN connects, so plain ssh works.
+2. **Otherwise**, it keeps **one** long-lived ssh session open (one Duo approval) and streams every command
+   through it (`scripts/sw`). Each command then takes a couple of seconds and costs no push.
+3. **No setup at all:** you paste Claude's commands into the Open OnDemand web shell.
 
-The script can also be used by hand: `skills/seawulf/scripts/sw start | run | status | stop`.
+You always log in and approve Duo yourself, and Claude never sees or stores your password. One-time setup
+(ssh config; on Windows, WSL) is in [connecting](skills/seawulf/references/connecting.md).
 
-## What's in it
+## What's inside
 
 | Path | What |
 | --- | --- |
-| [`skills/seawulf/SKILL.md`](skills/seawulf/SKILL.md) | What Claude follows: one session, no ssh retries, Slurm habits (idempotent submits, scratch, honest queue reading) |
-| [`skills/seawulf/scripts/sw`](skills/seawulf/scripts/sw) | The session script (macOS, Linux, WSL; forwards to WSL from Git Bash on Windows) |
-| [`skills/seawulf/references/setup.md`](skills/seawulf/references/setup.md) | One-time setup and troubleshooting |
-| [`skills/seawulf/references/seawulf-notes.md`](skills/seawulf/references/seawulf-notes.md) | Observed facts about SeaWulf, each marked verified (with date) or reported |
+| [`skills/seawulf/SKILL.md`](skills/seawulf/SKILL.md) | The overview Claude follows: how the cluster works, the safety rules, and where to look next |
+| [`references/connecting.md`](skills/seawulf/references/connecting.md) | Accounts, login hosts, OnDemand, ssh config and keys, Duo and lockouts, Windows/WSL, troubleshooting |
+| [`references/slurm.md`](skills/seawulf/references/slurm.md) | Queues and limits, shared vs whole-node, A100 GPUs, batch and interactive jobs, arrays, dependencies, monitoring, failure causes, priority |
+| [`references/software.md`](skills/seawulf/references/software.md) | Modules, conda/pip placement, GPU Python, Singularity, Jupyter and other OnDemand apps, building from source |
+| [`references/storage-and-data.md`](skills/seawulf/references/storage-and-data.md) | Home, scratch and project space, quotas and purge, every way to move data |
+| [`references/nvwulf.md`](skills/seawulf/references/nvwulf.md) | The H200/Blackwell GPU cluster (from documentation; untested) |
+| [`references/verified-facts.md`](skills/seawulf/references/verified-facts.md) | Every fact with its source and date |
+| [`templates/`](skills/seawulf/templates/) | Job scripts (shared CPU, A100 GPU, array), validated on the cluster |
+| [`scripts/sw`](skills/seawulf/scripts/sw) | The one-session runner (macOS, Linux, WSL; forwards from Git Bash on Windows) |
+| [`scripts/cluster-facts.sh`](skills/seawulf/scripts/cluster-facts.sh) | Prints current queues, limits, node states, your accounts, quotas, modules and jobs |
 
 ## Status
 
-Tested on Windows 11 with WSL (Ubuntu 24.04), on the A100 login node (`milan`), in November 2026. Not yet
-tested on macOS or Linux clients, or on other SeaWulf login nodes. Reports and fixes are welcome.
+Checked on 2026-11-20 against SeaWulf's milan login node, from Windows 11 with WSL (Ubuntu 24.04), using one
+user's account. Not yet tested from macOS or Linux clients, on other accounts, or on NVwulf. Reports and fixes
+are welcome: open an issue or PR.
 
-Not affiliated with or endorsed by Stony Brook University or its Research Computing team. Follow SBU's
-acceptable-use policies; you are responsible for what runs under your account.
+Not affiliated with or endorsed by Stony Brook University or Research Computing & Informatics. Follow SBU's
+acceptable-use policies; you are responsible for what runs under your account. For help with the clusters
+themselves, see [RCI's documentation](https://rci.stonybrook.edu/hpc/docs).
 
 ## License
 

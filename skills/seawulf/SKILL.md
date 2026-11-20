@@ -1,75 +1,84 @@
 ---
 name: seawulf
-description: Run commands, Slurm jobs and file work on Stony Brook University's SeaWulf HPC cluster from Claude Code, without a Duo push per command. Use this whenever the user wants anything done on SeaWulf or SBU HPC — checking or submitting Slurm jobs (sbatch, squeue, sacct), running code on A100 GPUs, setting up conda envs in scratch, reading logs or results on the cluster, or connecting Claude to "the HPC", "seawulf", "milan", or "the cluster" — even if they don't mention ssh or Duo.
+description: Work on Stony Brook University's HPC clusters (SeaWulf, and NVwulf for GPUs) from Claude Code: connecting through Duo without locking the user out, submitting and debugging Slurm jobs, choosing queues, using A100 GPUs, setting up conda/Python and modules, storage and quotas, moving data. Use this whenever the user mentions SeaWulf, NVwulf, SBU or Stony Brook HPC, "the cluster", milan, sbatch/squeue/Slurm on SBU systems, or wants to run code, training or models on university GPUs or compute, even if they don't know HPC terms.
 ---
 
-# SeaWulf from Claude Code
+# Stony Brook HPC (SeaWulf / NVwulf)
 
-SeaWulf (Stony Brook University's HPC cluster) requires a Duo approval for **every new ssh session**, including sessions multiplexed over an already-open connection. A Claude that runs `ssh seawulf <command>` for each step sends the user a phone push for each step, and when one isn't approved quickly the command silently fails after about a minute. That looks like a flaky cluster, but it's the user's phone.
+Use this to take someone from "I have access to the university cluster" to working jobs. It assumes no prior HPC knowledge on either side, and explains things to the user in plain words as you go.
 
-So: one long-lived session, approved once, with every command streamed through it by `scripts/sw`.
+## The mental model
 
-## The rules, and why
+- **SeaWulf** is a shared cluster: hundreds of compute nodes run by Slurm, a queueing system. You `ssh` to a **login node** (`milan.seawulf.stonybrook.edu`), which is shared by everyone and is only for editing, files, installing and **submitting jobs**. Real work runs on compute nodes as **jobs**: a script that asks for cores, memory, GPUs and a time limit, waits in a queue, runs, and writes output files.
+- **Storage:**
+  - home is small and backed up (20 GB);
+  - scratch is large and temporary (20 TB, files untouched for 45 days are deleted);
+  - groups can get project space.
+- **Every login needs Duo** (a phone approval). After **10 unanswered Duo requests in a row, the account is locked.**
+- **NVwulf** is a separate, newer GPU cluster (H200 / Blackwell) with its own login and storage.
 
-- **Never run plain `ssh`, `scp` or `rsync` to SeaWulf yourself.** Each is a new session, so a Duo push. Use `scripts/sw run`.
-- **Never retry a connection or a command automatically.** A retry is another push, and a command that did start (say, `sbatch`) must not run twice.
-- **Ask before `sw start`.** It sends a push to the user's phone; tell them to expect it and approve it.
-- **Never ask for, type, store or log the user's password, and never try to answer Duo.** The user logs in themselves. This skill works *with* Duo, never around it.
+## Rules that protect the user
 
-## Workflow
+1. **Never loop or retry connections.** Each new ssh session can send a Duo push, and unanswered pushes lock the account. If a command fails after about 60 seconds with no output, a push probably went unanswered: stop and tell the user.
+2. **Ask before anything that sends a push**, and say it's coming, so they can approve it.
+3. **Never ask for, type, store or log the user's password**, and never try to answer Duo. The user authenticates; Claude works through what they opened.
+4. **Nothing heavy on login nodes.** Builds, small installs, `git` and quick checks are fine. Anything long, multi-core or memory-hungry goes in a job.
+5. **Never put environments or installed software in scratch** (the purge breaks them), and copy results worth keeping out of scratch.
+6. **Don't run anything twice that must run once** (above all `sbatch`). After an unclear failure, check the queue before resubmitting.
+7. **Only cancel jobs you started for this task, with the user's OK.**
 
-### 1. Is a session open?
+## Step 1: Connect
+
+Read [references/connecting.md](references/connecting.md) the first time. In short, ask the user which of these applies:
+
+| Situation | How Claude runs commands |
+| --- | --- |
+| On the **SBU VPN** (Duo once at VPN connect), or ssh connection reuse confirmed to not push per command | Plain `ssh seawulf '<command>'` |
+| Otherwise (the usual case; Windows needs WSL) | One long-lived session with **`scripts/sw`**: one Duo push, then no more. The user logs in once in their own terminal, then Claude runs `scripts/sw start` and approves nothing further |
+| No ssh setup at all | The user runs Claude's one-line commands in the Open OnDemand shell ([sn-ood.seawulf.stonybrook.edu](https://sn-ood.seawulf.stonybrook.edu)) and pastes the output back |
+
+With `scripts/sw`:
 
 ```bash
 SW=<this skill's directory>/scripts/sw
-"$SW" status
-```
-
-If it prints `session open`, go to step 3.
-
-### 2. Open one (needs the user)
-
-The first time on a machine, the user needs a `seawulf` entry in their ssh config, and on Windows, WSL. Walk them through [references/setup.md](references/setup.md) if `ssh -G seawulf` shows no `milan.seawulf...` hostname or `sw start` reports that ssh couldn't connect.
-
-Then:
-
-1. Ask the user to log in themselves in a terminal (on Windows: inside WSL) and leave it open:
-   `ssh seawulf`, then password, then Duo. This holds the authenticated connection the session will reuse.
-2. Tell them a second Duo push is coming, then run `"$SW" start` and wait for `session open` (up to 2 minutes).
-
-If it fails, show the user the lines `sw start` printed and ask; don't loop.
-
-### 3. Run things
-
-```bash
-"$SW" run 600 <<'EOF'
+"$SW" status                       # open?
+"$SW" start                        # ONE Duo push: tell the user first
+"$SW" run 600 <<'EOF'              # each script runs as its own login-shell bash on the login node
 squeue --me
 EOF
 ```
 
-- The script runs as its own login-shell `bash` on the login node: `module`, `squeue`, `sbatch` and conda work, and `cd`, `exit` or `set -e` in one script don't affect the next.
-- The number is how long to wait for output (seconds). Past it, `sw` returns 124, but the command **keeps running** on the cluster. Check its result later instead of rerunning it.
-- Exit status and output are the script's own.
-- Each call takes a couple of seconds and costs no Duo push.
+`run` returns the script's exit status. 124 means it's still running on the cluster after the wait (don't rerun it; check later). Each call takes about 2 seconds and costs no push.
 
-Use the login node for light work: editing, `git`, `sbatch`, `squeue`, reading logs, small installs. Anything heavy goes in a Slurm job.
+## Step 2: Get your bearings
 
-### 4. Get code and data there
+First thing in a new session, run [`scripts/cluster-facts.sh`](scripts/cluster-facts.sh) on the cluster (`"$SW" run 300 < scripts/cluster-facts.sh`). It prints:
+- queues and limits;
+- which nodes are down;
+- the user's Slurm accounts, quotas and project space;
+- key modules;
+- their current jobs.
 
-- **Code:** push it to a git remote, then `git clone` or `git pull` on the cluster through `sw run`. The login node reaches GitHub.
-- **Small text files:** write them in a script: `cat > file <<'X' ... X` inside the `sw run` heredoc. Pick a delimiter the content can't contain.
-- **Large files:** ask the user. scp/sftp mean new sessions (Duo), and they failed over a shared connection in testing.
+Trust it over any notes here: clusters change.
 
-### 5. Slurm habits that avoid real trouble
+## Step 3: Do the work
 
-- **Make submissions idempotent.** Give jobs a recognisable name (`-J`) and check `squeue --me -n NAME` before `sbatch`. `sbatch` on SeaWulf has been reported to print `Socket timed out` and still create the job, so after any `sbatch` error, look at the queue instead of resubmitting.
-- **Wait inside one `sw run`**, rather than polling with many calls. For example, loop over `grep -q DONE log; sleep 10`, with a timeout below the `sw run` wait.
-- **Read the queue honestly.** `squeue --me --start` gives the scheduler's estimate, and `sinfo -p a100 -N` shows node states. Nodes marked `draining`, often "Reboot ASAP", take no new jobs, so a long wait is the cluster, not the job.
-- **Put work, envs, caches and outputs under `/gpfs/scratch/$USER/`.** The home quota is small, and scratch is not backed up.
-- **Only cancel jobs the user started for this task**, and only with their say-so.
+| The user wants to… | Read |
+| --- | --- |
+| Run something: batch or interactive job, GPU, array, dependencies, pick a queue, debug a failed or stuck job | [references/slurm.md](references/slurm.md), with templates in [`templates/`](templates/) |
+| Install Python packages or conda envs, use modules, CUDA/PyTorch/vLLM, containers, Jupyter | [references/software.md](references/software.md) |
+| Know where to put files, quotas, move data in or out | [references/storage-and-data.md](references/storage-and-data.md) |
+| Use H100/H200-class GPUs, or large AI work | [references/nvwulf.md](references/nvwulf.md) (documentation-based, untested) |
+| Check whether a fact is current | [references/verified-facts.md](references/verified-facts.md) (what was checked, how, and when) |
 
-Partitions, accounts and other details vary by user and change over time. [references/seawulf-notes.md](references/seawulf-notes.md) lists what has been observed, each with how and when it was checked. Confirm anything time-sensitive on the cluster (`sinfo`, `sacctmgr show assoc user=$USER`) rather than trusting the notes.
+A typical first job, done well:
+1. Put the code on the cluster with git (`git clone` in scratch).
+2. Copy a template from `templates/` and fill it in. Use a `-shared` queue with `--mem` for small jobs, or `a100` with `--gres=gpu:1` for GPU.
+3. Run `sbatch --test-only` to check the request, then `sbatch --parsable` to submit, and record the job ID.
+4. Wait inside **one** remote command (a loop on `squeue -j`), not by calling in repeatedly. Then read the `.out`/`.err` files and `sacct -j <id>`.
+5. If it failed, check the table in slurm.md section 9, fix, and resubmit.
+6. Copy results worth keeping out of scratch.
 
-## When the session drops
+## Explaining to the user
 
-Laptop sleep, network changes, or WSL restarting end the session: `sw status` then says `no session`, or `run` reports `the session closed`. Tell the user and ask before `sw start` again, since that costs a push. If their own `ssh seawulf` window also closed, they need to log in there first.
+Many users are new to HPC. When you choose a queue, size or location, say why in a sentence. For example: "a shared queue, since you only need 4 cores; it starts sooner than a whole node." When jobs wait, show them the real reason from `squeue`/`sinfo` (queue full, nodes rebooting, per-user limit) instead of guessing.

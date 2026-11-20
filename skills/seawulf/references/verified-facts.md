@@ -1,0 +1,35 @@
+# What was checked, how, and when
+
+Clusters change. Status: **verified** = seen by running it on SeaWulf; **docs** = RCI documentation (fetched
+2026-11-20); **reported** = from users' notes, not re-checked. Where the docs and the cluster disagree, the
+cluster's own answer is used and the disagreement is noted. Refresh with `scripts/cluster-facts.sh`.
+
+| Fact | Status |
+| --- | --- |
+| Login host `milan.seawulf.stonybrook.edu` (milan1/milan2); `/etc/hosts` also lists login1/login2 | Verified 2026-11-20 |
+| `login.seawulf` (login1/login2), Haswell and K80/P100/V100 retired November 2026 | Docs |
+| OS Rocky Linux 9.8; Slurm 21.08; Environment Modules 4.5.3 (no `module spider`) | Verified 2026-11-20 |
+| `squeue`/`sbatch`/`module` are on the PATH in a login shell; otherwise `module load slurm` | Verified 2026-11-20 (non-login shell lacked squeue) |
+| Every login needs Duo; 10 unanswered requests in a row lock the account | Docs |
+| Over a reused ssh connection (ControlMaster), each new session still prompted Duo on milan from a Windows/WSL client | Verified 2026-11-20 (the docs say reuse avoids repeat prompts: client-dependent?) |
+| On the SBU VPN, Duo is approved once at VPN connect | Docs |
+| scp/sftp over a reused connection failed; `tar \| ssh` streaming worked | Verified 2026-11-20 (Windows/WSL client) |
+| Queue time limits, node counts, min/max nodes, default memory per CPU (CPU-shared 2400 MB, A100 4016 MB) | Verified with `scontrol show partition` 2026-11-20 (docs give `debug-40core` max 8 nodes; scontrol says 6) |
+| Per-user QOS limits (running jobs, submitted 100, shared-queue cpu/mem caps) | Verified with `sacctmgr show qos` 2026-11-20 |
+| A100 nodes: 11 (`a100-[01-11]`), 4 x A100 each, 64 cores, ~257 GB; shared; the three a100 queues use the same nodes | Verified (`sinfo`, `scontrol show node`); 80 GB per GPU from docs |
+| On 2026-11-20, 7/11 A100 nodes and 25+ HBM nodes were `draining` ("Reboot ASAP"); the GPU queue estimate was ~3-4 days | Verified 2026-11-20 |
+| CPU nodes: dn* 40 cores / 192 GB; dg* 96 cores / 256 GB; xm* (HBM) 96 cores / ~380 GB | Verified (`scontrol show node`) |
+| `sbatch --test-only`, arrays (`%A_%a`, `%4` throttle), `seff`, `myquota` | Verified 2026-11-20 (templates submitted and ran) |
+| MaxArraySize 1001; backfill scheduler; multifactor priority | Verified (`scontrol show config`) |
+| Home 20 GB / 200k files; scratch 20 TB / 10M files | Verified (`myquota`) |
+| Scratch purge after 45 days (older pages: 30); project space up to 10 TB, not backed up | Docs |
+| Never build envs/software in scratch; never install into conda base | Docs |
+| Modules: CUDA up to `cuda133/toolkit/13.3`, cudnn 9.12, `anaconda/3` (default 3-new), `miniforge/3`, `python/3.14.6`, gcc to 13.2, `jupyter`, `globus`, `claude-code` | Verified (`module -t avail`, milan) |
+| SingularityCE 4.5.1; no apptainer | Verified |
+| `singularity pull` of a large Docker image SIGKILLed on extraction | Reported |
+| Login node reaches GitHub; compute nodes reach huggingface.co and pypi.org | Verified 2026-11-20 |
+| `sbatch` can print "Socket timed out" and still create the job | Reported |
+| OnDemand at sn-ood.seawulf.stonybrook.edu (Jupyter on CPU nodes, RStudio, MATLAB, code-server, vLLM/Ollama apps) | Docs |
+| NVwulf queues, hosts and hardware | Docs only (not accessed) |
+| Globus via `module load globus/3.15.0` on milan, personal endpoint | Docs |
+| The login banner restricts using SBU computing to train AI models for entities headquartered in listed countries | Seen on login 2026-11-20 |
