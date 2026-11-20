@@ -1,15 +1,7 @@
-<p align="center">
-  <img src="assets/banner.svg" alt="seawulf: a Claude Code plugin for Stony Brook's HPC clusters" width="100%">
-</p>
-
-<p align="center">
-  <a href="https://github.com/khaihernlow/seawulf-claude-code/releases"><img alt="Release" src="https://img.shields.io/github/v/release/khaihernlow/seawulf-claude-code?color=0ea5e9"></a>
-  <img alt="Claude Code plugin" src="https://img.shields.io/badge/Claude%20Code-plugin-d97757">
-  <img alt="Checked on SeaWulf" src="https://img.shields.io/badge/checked%20on-SeaWulf%20milan-0f2a44">
-  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue"></a>
-</p>
-
 # seawulf-claude-code
+
+[![Release](https://img.shields.io/github/v/release/khaihernlow/seawulf-claude-code)](https://github.com/khaihernlow/seawulf-claude-code/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 A Claude Code plugin that lets Claude work on **Stony Brook University's HPC clusters**: SeaWulf, plus
 NVwulf for large GPU jobs. You don't need to know HPC, and Claude doesn't need to be told how the cluster
@@ -51,9 +43,25 @@ you also need WSL. Claude walks you through the rest the first time.
 
 ## Connecting without a Duo push per command
 
-<p align="center">
-  <img src="assets/terminal.svg" alt="Terminal: preflight checks the setup, sw start opens one session with one Duo push, then sw run sends a command through it" width="100%">
-</p>
+What it looks like (real output from 2026-11-20, NetID replaced):
+
+```
+$ scripts/preflight.sh
+Checking ssh setup for 'seawulf'
+  ok    Host seawulf -> milan.seawulf.stonybrook.edu as jdoe
+  ok    ControlMaster on (your own login can be reused by the session)
+  ok    your own login is open (master connection)
+  next  'sw start' opens the long-lived session (ONE Duo push: tell the user first)
+
+$ scripts/sw start
+Duo push sent to the user's phone; waiting up to 120 s for approval...
+session open
+
+$ scripts/sw run <<'EOF'
+sbatch --test-only templates/gpu-a100.sbatch
+EOF
+sbatch: Job 2443554 to start at 2026-11-24T14:36:57 using 8 processors on nodes a100-02 in partition a100
+```
 
 Claude checks your setup with `preflight.sh` (which sends no pushes), then uses the cheapest safe option:
 
