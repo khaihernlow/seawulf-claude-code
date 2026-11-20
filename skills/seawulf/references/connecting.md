@@ -78,22 +78,24 @@ Source: [connecting](https://rci.stonybrook.edu/docs/connecting-cluster), [Duo](
 - **Connection reuse (ControlMaster):** per RCI's Duo page, later `ssh`/`scp`/`rsync` over an open connection don't ask again. **Observed exception:** on `milan` on 2026-11-20 (Windows 11, WSL Ubuntu 24.04 client), every new command over a reused connection still sent a push. Whether reuse saves pushes may depend on the client or node, so ask the user whether pushes arrive.
 - `DUO_PASSCODE` only chooses the method (push, phone, passcode). It doesn't reduce how many approvals there are.
 
-## 6. How Claude connects (choose one)
+## 6. Ways Claude can work (the user chooses)
 
-Ask the user which applies, in this order of preference:
+No way is best for everyone. Each is described here with its trade-offs; ask the user which fits how they work.
 
 1. **On the SBU VPN, or connection reuse confirmed to work** (no push per command): run `ssh seawulf '<command>'` directly. Still never loop on failures.
-2. **Otherwise: one long-lived session with `scripts/sw`** (one push per session, then none):
+2. **One long-lived session with `scripts/sw`** (one push per session, then none). Fits work whose code and tools live on the laptop:
    - The user logs in once in their own terminal (`ssh seawulf`) and keeps it open. With ControlMaster, the session reuses that authenticated connection. With a key, that first login is optional, but `sw start` still sends its own push either way.
    - Tell the user a push is coming, then run `scripts/sw start`.
-   - Run commands with `scripts/sw run [SECS] <<'EOF' ... EOF`.
-   - `scripts/sw status` / `stop`.
+   - Run commands with `scripts/sw run [SECS] <<'EOF' ... EOF`. Move files with `sw put` / `sw get` (up to 50 MB).
+   - `scripts/sw status`, and `sw stop` when the work is done.
    - If the session drops (sleep, network, WSL restart), ask before `sw start` again.
 3. **Claude Code on the cluster itself.** SeaWulf provides it as a module (`claude-code/2.1.207` on 2026-11-20; it also loads `node.js`):
    - The user connects once (ssh or the OnDemand shell: one Duo push), then runs `module load claude-code`, starts a `tmux` session so a dropped connection doesn't kill it, and runs `claude` in their project folder in scratch.
    - Commands are then local, with no per-command Duo, but Claude runs on the shared login node: **3 CPUs and 15 GB per user**, and everything heavy still goes through Slurm.
    - Unsigned, `claude -p` answers `Not logged in · Please run /login`. The user signs in once with `claude auth login` (Claude subscription by default; `--console` for API billing), or `claude setup-token` for a long-lived token on a subscription. On a machine without a browser, login normally shows a link to open on the laptop. The full sign-in on the cluster hasn't been tested here. The login is stored in the user's SeaWulf home (`~/.claude`).
    - The local laptop's files and tools aren't available that way. Code should come in through git.
+   - Install this plugin there as well (the same two `/plugin` commands, inside Claude Code on the cluster), so the cluster-side Claude knows the queues, limits and rules too. The module's Claude Code version may lag behind the laptop's.
+   - Fits work that lives only on the cluster.
 4. **No terminal setup at all:** the user works in Open OnDemand's shell and pastes Claude's one-line commands and their output back and forth. It's slow, but it needs nothing installed.
 
 ## 7. Windows

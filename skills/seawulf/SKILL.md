@@ -24,16 +24,20 @@ NVwulf is a separate GPU cluster (H200 / Blackwell). Many users are new to HPC: 
 8. **Confirm before destructive actions:** `scancel` (only jobs started for this task), bulk `rm`, overwriting results.
 9. **Close the session when the work is done** (`sw stop`). RCI asks users to log out and not leave idle programs on login nodes. Submitted jobs keep running without it.
 
-## 1. Preflight and connect
+## 1. Find out how this user works
 
-Run `scripts/preflight.sh` locally first. It reports what's set up (ssh entry, WSL on Windows, an open session) and what the user must do next. Then use the first option that fits:
+**Already on SeaWulf?** If `hostname` is a SeaWulf login node (`milan1`/`milan2`/`xeonmax`), Claude is running on the cluster (Claude Code module): commands are local. Skip to step 2. The login-node limits apply to Claude itself too.
 
-| Situation | How to run commands |
-| --- | --- |
-| The user is on the **SBU VPN** (Duo once at VPN connect) | Plain `ssh seawulf '<command>'` |
-| Usual case (Windows needs WSL) | **One long-lived session:** the user logs in once in their terminal; Claude runs `scripts/sw start` (one push), then `scripts/sw run` for everything (no more pushes) |
-| The user prefers Claude running **on the cluster** | `module load claude-code` there (installed by RCI); the user signs in once with `claude auth login` |
-| Nothing set up | The user pastes one-line commands into the Open OnDemand shell ([sn-ood.seawulf.stonybrook.edu](https://sn-ood.seawulf.stonybrook.edu)) and the output back |
+Otherwise, ask which way suits the user; none is best for everyone:
+
+| Way | How Claude runs commands | Suits |
+| --- | --- | --- |
+| **One session from the laptop** | The user logs in once in their own terminal; Claude runs `scripts/sw start` (one push), then `sw run`/`put`/`get` with no more pushes | Code and tools on the laptop; Windows needs WSL |
+| **SBU VPN** | Duo was approved at VPN connect: plain `ssh seawulf '<command>'` | Users on the VPN anyway |
+| **Claude Code on SeaWulf** | The user runs `module load claude-code` (in `tmux`) and `claude auth login` there, and installs this plugin there | Work that lives only on the cluster |
+| **Open OnDemand shell** | The user pastes one-line commands into [sn-ood.seawulf.stonybrook.edu](https://sn-ood.seawulf.stonybrook.edu) and the output back | No setup possible |
+
+For the laptop ways, run `scripts/preflight.sh` first. It checks the ssh entry, WSL and an open session without connecting, and says what the user must do next.
 
 ```bash
 SW=<this skill's directory>/scripts/sw

@@ -14,7 +14,7 @@ and date, and a bundled script lets Claude re-check the cluster instead of trust
 
 ## Contents
 
-[Install](#install) · [Try it](#try-it) · [Connecting](#connecting-without-a-duo-push-per-command) ·
+[Install](#install) · [Try it](#try-it) · [Ways to work](#ways-to-work) ·
 [For a whole lab](#for-a-whole-lab) · [What's inside](#whats-inside) · [Testing](#testing) ·
 [Contributing](#contributing) · [Status](#status)
 
@@ -38,9 +38,25 @@ you also need WSL. Claude walks you through the rest the first time.
 - *"Run this script over these 200 input files on the cluster, 20 at a time."*
 - *"Why has my GPU job been pending all day?"*
 
-## Connecting without a Duo push per command
+## Ways to work
 
-What it looks like (real output from 2026-11-20, NetID replaced):
+SeaWulf asks for Duo on every new ssh connection (SSH keys only remove the password step), so how Claude
+connects matters. There are four ways; pick what fits how you work. The skill's knowledge (queues, limits,
+envs, failures) applies to all of them.
+
+| | Claude runs on | Duo | Setup | Good when |
+| --- | --- | --- | --- | --- |
+| **One session from your laptop** | Your laptop | One push per session; commands then take ~2 s with no pushes | ssh config; WSL on Windows | Your code and tools live on your laptop and the cluster runs it |
+| **On the SBU VPN** | Your laptop | Approved once at VPN connect; plain ssh after that | VPN client | You're on the VPN anyway |
+| **Claude Code on SeaWulf** | The login node (`module load claude-code`) | One push per login | Sign in to Claude there once; install this plugin there too | You work only on the cluster |
+| **Open OnDemand shell** | Anywhere | One login in the browser | None | You can't set anything up; you paste commands back and forth |
+
+You always authenticate yourself, and Claude never sees or stores your password.
+
+### One session from your laptop
+
+`scripts/preflight.sh` checks your setup without connecting. `scripts/sw` then holds one session open for every
+command, plus `put`/`get` for files. Real output from 2026-11-20 (NetID replaced):
 
 ```
 $ scripts/preflight.sh
@@ -60,17 +76,22 @@ EOF
 sbatch: Job 2443554 to start at 2026-11-24T14:36:57 using 8 processors on nodes a100-02 in partition a100
 ```
 
-Claude checks your setup with `preflight.sh` (which sends no pushes), then uses the cheapest safe option:
+### Claude Code on SeaWulf
 
-| Your situation | What happens |
-| --- | --- |
-| On the **SBU VPN** | Duo was approved when the VPN connected, so Claude uses plain ssh |
-| Usual case | You log in once yourself; Claude opens **one** long-lived session (one more push) and sends every command through it, about 2 s each, with no more pushes |
-| You'd rather run Claude **on the cluster** | SeaWulf has Claude Code installed: `module load claude-code`, then sign in once |
-| No terminal setup | You paste Claude's commands into the Open OnDemand web shell |
+RCI provides Claude Code as a module. Log in (`ssh seawulf`, one push), then:
 
-SSH keys remove the password step but **not** Duo (tested). You always authenticate yourself, and Claude never
-sees or stores your password. Details: [connecting.md](skills/seawulf/references/connecting.md).
+```
+tmux                          # so Claude survives a dropped connection
+module load claude-code
+claude auth login             # once; stored in your SeaWulf home
+claude                        # then, inside Claude Code, install this plugin with the two /plugin commands above
+```
+
+Claude then runs on the shared login node: commands are local, but the login-node limits (3 CPUs, 15 GB per user)
+apply to Claude and everything it runs there. Heavy work still goes through Slurm, which the skill handles.
+Signing in on the cluster hasn't been tested yet; reports welcome.
+
+Details for all four: [connecting.md](skills/seawulf/references/connecting.md).
 
 ## For a whole lab
 
