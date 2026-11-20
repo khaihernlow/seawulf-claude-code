@@ -1,8 +1,5 @@
 # seawulf-claude-code
 
-[![Release](https://img.shields.io/github/v/release/khaihernlow/seawulf-claude-code)](https://github.com/khaihernlow/seawulf-claude-code/releases)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-
 A Claude Code plugin that lets Claude work on **Stony Brook University's HPC clusters**: SeaWulf, plus
 NVwulf for large GPU jobs. You don't need to know HPC, and Claude doesn't need to be told how the cluster
 works. Install it and ask.
