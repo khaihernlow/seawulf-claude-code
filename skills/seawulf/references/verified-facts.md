@@ -33,7 +33,8 @@ cluster's own answer is used and the disagreement is noted. Refresh with `script
 | Login node per-user limits: 3 CPUs (`cpu.max 300000 100000`) and 15 GiB memory (`memory.max`), enforced by cgroup; the node has 128 cores / 503 GB shared | Verified 2026-11-20 (`/sys/fs/cgroup/user.slice/user-$UID.slice`) |
 | Claude Code available as a module (`claude-code/2.1.42`, `2.1.49`, `2.1.207`; loads `node.js/24.4.1`) | Verified 2026-11-20 (`claude --version`); signing in on the cluster untested |
 | `srun ... <command>` runs non-interactively and blocks until done | Verified 2026-11-20 |
-| `conda activate <prefix>` works in a batch job after `module load anaconda/3`, without sourcing conda.sh | Verified 2026-11-20 |
+| `conda activate <prefix>` works in a batch job after `module load anaconda/3`, without sourcing conda.sh, with or without `set -u` | Verified 2026-11-20 |
+| A blocking `srun` on `short-40core-shared` waited 20+ minutes for resources in the afternoon (it started in ~1 s that morning) | Verified 2026-11-20 |
 | `miniforge/3` provides conda 26.1.1 and mamba | Verified 2026-11-20 |
 | Small `singularity pull` works on the login node | Verified 2026-11-20 (alpine, 6 s) |
 | `sbatch` can print "Socket timed out" and still create the job | Reported |

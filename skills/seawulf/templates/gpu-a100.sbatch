@@ -10,7 +10,7 @@
 #SBATCH --output=%x-%j.out
 #SBATCH --error=%x-%j.err
 
-set -eo pipefail                         # (no -u: conda's activate scripts reference unset variables)
+set -euo pipefail                        # conda activate works with -u here (tested 2026-11-20)
 module purge
 module load anaconda/3                   # or miniforge/3
 conda activate /gpfs/home/$USER/envs/myenv   # the env's real path; works in batch jobs as is
