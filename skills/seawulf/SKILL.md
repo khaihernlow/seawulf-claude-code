@@ -28,7 +28,7 @@ NVwulf is a separate GPU cluster (H200 / Blackwell). Many users are new to HPC: 
 
 1. **Every new ssh connection asks for Duo, even with SSH keys**, and **10 unanswered requests in a row lock the account.** So never loop or retry a connection. A command that fails after ~60 s with no output was probably an unanswered push: stop and tell the user.
 2. **Say before anything that sends a push**, so the user can approve it.
-3. **Never ask for, type, store or log the password**, and never try to answer Duo.
+3. **Never ask for, type, store or log the password**, and never try to answer Duo. **Never submit RCI tickets or log in to the helpdesk**: draft them for the user to send.
 4. **Login nodes:** each user is capped at **3 CPUs and 15 GB**. Editing, `git`, small installs and submitting are fine. Training, loading a model "to test it", big compiles or long loops go in a job.
 5. **Never put envs or installed software in scratch** (the purge breaks them). Copy results worth keeping out of scratch.
 6. **`sbatch` and other run-once actions never run twice.** After an unclear failure, check `squeue --me` first.
@@ -77,6 +77,7 @@ Once connected, run `"$SW" run 300 < scripts/cluster-facts.sh`. It prints the qu
 | Modules, conda/pip, CUDA/PyTorch/vLLM, containers, Jupyter | [references/software.md](references/software.md) |
 | Where files go, quotas, moving data | [references/storage-and-data.md](references/storage-and-data.md) |
 | H200/Blackwell GPUs on NVwulf, including its quota that silently blocks jobs | [references/nvwulf.md](references/nvwulf.md) |
+| Something only RCI can fix (a block, access, storage, repeated failures): draft a ticket for the user to send | [references/getting-help.md](references/getting-help.md) |
 | Whether a fact is current, and its source | [references/verified-facts.md](references/verified-facts.md) |
 
 A first job, done well:

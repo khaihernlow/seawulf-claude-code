@@ -2,6 +2,7 @@
 
 ## 0.6.0 (2026-11-20)
 
+- `references/getting-help.md`: when to contact RCI and how to draft a support ticket (RCI's required details plus job IDs, QOS and quota facts). Claude drafts; the user submits.
 - NVwulf verified on the cluster: H200 and Blackwell queues with real limits and defaults (1 CPU per GPU), fair-share costs, ready-made pytorch/vllm modules, Lustre paths, and the main trap: one 20 GB quota over home and scratch that, when exceeded, silently blocks every job (`QOSMaxJobsPerUserLimit`, not caught by `sbatch --test-only`).
 - `sw start` verified against NVwulf (`SW_HOST=nvwulf`); the 0.4.0 session code is now tested end to end.
 - README and SKILL.md say which GPUs are where: A100 on SeaWulf (older types retired), H200 and Blackwell on NVwulf.

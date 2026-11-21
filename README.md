@@ -117,6 +117,7 @@ To offer the plugin to everyone who opens a project, commit this to the project'
 | [`references/software.md`](skills/seawulf/references/software.md) | Modules, conda/pip placement, GPU Python, Singularity, Jupyter and OnDemand apps |
 | [`references/storage-and-data.md`](skills/seawulf/references/storage-and-data.md) | Home, scratch, project space, quotas, the purge, moving data |
 | [`references/nvwulf.md`](skills/seawulf/references/nvwulf.md) | NVwulf: H200 and Blackwell GPU queues, limits, modules, and the quota that blocks jobs |
+| [`references/getting-help.md`](skills/seawulf/references/getting-help.md) | When to contact RCI, and drafting tickets you send yourself |
 | [`references/verified-facts.md`](skills/seawulf/references/verified-facts.md) | Every fact with its source and date |
 | [`templates/`](skills/seawulf/templates/) | Shared-CPU, A100 and array job scripts, validated on the cluster |
 | [`scripts/preflight.sh`](skills/seawulf/scripts/preflight.sh) | Checks your local setup and says what's missing (no Duo) |
