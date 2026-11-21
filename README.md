@@ -5,7 +5,8 @@ NVwulf for large GPU jobs. You don't need to know HPC, and Claude doesn't need t
 works. Install it and ask.
 
 - **Connects safely.** SeaWulf asks for Duo on *every* new ssh connection, and 10 unanswered pushes lock your account. Claude uses one session per approval and never retries blindly.
-- **Runs jobs well:** picks the right queue, writes Slurm scripts (CPU, A100 GPU, arrays), waits sensibly, and works out why a job failed or is still waiting.
+- **Runs jobs well:** picks the right queue, writes Slurm scripts (CPU, GPU, arrays), waits sensibly, and works out why a job failed or is still waiting.
+- **Knows the GPUs:** SeaWulf's are A100s (its older K80, P100 and V100 nodes were retired in November 2026); NVwulf has H200 and RTX PRO 6000 Blackwell GPUs, with its own account and queues.
 - **Sets software up properly:** modules, conda/Python envs outside the purged scratch space, CUDA/PyTorch/vLLM, containers.
 - **Knows the rules:** login-node limits, quotas, the 45-day scratch purge, how to move data in and out.
 
@@ -112,10 +113,10 @@ To offer the plugin to everyone who opens a project, commit this to the project'
 | --- | --- |
 | [`skills/seawulf/SKILL.md`](skills/seawulf/SKILL.md) | What Claude reads first: the cluster in brief, the safety rules, how to connect, where to look next |
 | [`references/connecting.md`](skills/seawulf/references/connecting.md) | Accounts, hosts, OnDemand, ssh config and keys, Duo and lockouts, Windows/WSL, troubleshooting |
-| [`references/slurm.md`](skills/seawulf/references/slurm.md) | Queues and limits, shared vs whole-node, A100s, batch and interactive jobs, arrays, dependencies, monitoring, failure causes |
+| [`references/slurm.md`](skills/seawulf/references/slurm.md) | SeaWulf queues and limits, shared vs whole-node, A100 GPUs, batch and interactive jobs, arrays, dependencies, monitoring, failure causes |
 | [`references/software.md`](skills/seawulf/references/software.md) | Modules, conda/pip placement, GPU Python, Singularity, Jupyter and OnDemand apps |
 | [`references/storage-and-data.md`](skills/seawulf/references/storage-and-data.md) | Home, scratch, project space, quotas, the purge, moving data |
-| [`references/nvwulf.md`](skills/seawulf/references/nvwulf.md) | The H200/Blackwell cluster (from documentation; untested) |
+| [`references/nvwulf.md`](skills/seawulf/references/nvwulf.md) | NVwulf: H200 and Blackwell GPU queues, limits, modules, and the quota that blocks jobs |
 | [`references/verified-facts.md`](skills/seawulf/references/verified-facts.md) | Every fact with its source and date |
 | [`templates/`](skills/seawulf/templates/) | Shared-CPU, A100 and array job scripts, validated on the cluster |
 | [`scripts/preflight.sh`](skills/seawulf/scripts/preflight.sh) | Checks your local setup and says what's missing (no Duo) |
@@ -159,7 +160,7 @@ Corrections are especially welcome. The cluster changes, and some parts are only
 ## Status
 
 Checked on 2026-11-20 against SeaWulf's milan login node, from Windows 11 with WSL (Ubuntu 24.04), on one
-user's account. Not yet tested from macOS or Linux, on other accounts, or on NVwulf.
+user's account; NVwulf checked the same day. Not yet tested from macOS or Linux, or on other accounts.
 
 Related work: [hpc-skills](https://gitee.com/ktwu/hpc-skills) (Tufts, Northwestern, KAUST, EPFL) and
 [Cirrus skills](https://skills.cirrus.ac.uk/) take the same approach for other clusters.

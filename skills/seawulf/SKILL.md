@@ -18,8 +18,9 @@ NVwulf is a separate GPU cluster (H200 / Blackwell). Many users are new to HPC: 
 | --- | --- |
 | Small CPU jobs | `short-40core-shared` / `short-96core-shared`: up to 4 h, part of a node. **Set `--mem`**: the default is only ~2.4 GB per core |
 | Whole nodes | `short-*` 4 h · `medium-*` 12 h (6+ nodes) · `long-*` 2 days · `extended-*` 7 days. 40-core nodes 192 GB, 96-core nodes 256 GB |
-| GPUs | `a100` (8 h) / `a100-long` (2 days): `--gres=gpu:N`, N ≤ 4. Per GPU ask ≤ 16 cores and ~60 GB `--mem` (default ~4 GB per core). 2 running jobs per user |
-| Login node | 3 CPUs and 15 GB per user |
+| SeaWulf GPUs (A100 only; older types retired) | `a100` (8 h) / `a100-long` (2 days): `--gres=gpu:N`, N ≤ 4. Per GPU ask ≤ 16 cores and ~60 GB `--mem` (default ~4 GB per core). 2 running jobs per user |
+| NVwulf GPUs | `debug-b40x4` (2 h, usually free) · `b40x4` Blackwell 96 GB · `h200x4` / `h200x8` H200 141 GB (busy). Default **1 CPU per GPU**: set `-c` and `--mem`. **Over its 20 GB quota (home + scratch together), every job pends with `QOSMaxJobsPerUserLimit`**: check `lfs quota -h -u $USER /lustre` |
+| Login node | 3 CPUs and 15 GB per user (both clusters) |
 | Storage | home 20 GB (backed up) · scratch 20 TB, purged after 45 days · project space up to 10 TB (PI requests) |
 | Conda in a job | `module load anaconda/3` then `conda activate /path/to/env`, inside the script. This works in batch jobs (verified). Don't swap it for a `PATH` hack: activation also sets library paths that packages like CUDA libraries rely on |
 
@@ -75,7 +76,7 @@ Once connected, run `"$SW" run 300 < scripts/cluster-facts.sh`. It prints the qu
 | Choosing a queue, batch or interactive jobs, GPUs, arrays, dependencies, monitoring, failed or waiting jobs | [references/slurm.md](references/slurm.md), with job templates in [templates/](templates/) |
 | Modules, conda/pip, CUDA/PyTorch/vLLM, containers, Jupyter | [references/software.md](references/software.md) |
 | Where files go, quotas, moving data | [references/storage-and-data.md](references/storage-and-data.md) |
-| H200/Blackwell GPUs | [references/nvwulf.md](references/nvwulf.md) (from documentation, untested) |
+| H200/Blackwell GPUs on NVwulf, including its quota that silently blocks jobs | [references/nvwulf.md](references/nvwulf.md) |
 | Whether a fact is current, and its source | [references/verified-facts.md](references/verified-facts.md) |
 
 A first job, done well:

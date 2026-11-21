@@ -39,6 +39,9 @@ cluster's own answer is used and the disagreement is noted. Refresh with `script
 | Small `singularity pull` works on the login node | Verified 2026-11-20 (alpine, 6 s) |
 | `sbatch` can print "Socket timed out" and still create the job | Reported |
 | OnDemand at sn-ood.seawulf.stonybrook.edu (Jupyter on CPU nodes, RStudio, MATLAB, code-server, vLLM/Ollama apps) | Docs |
-| NVwulf queues, hosts and hardware | Docs only (not accessed) |
+| NVwulf queues, hardware, defaults (1 CPU per GPU), per-user limits, billing weights (H200 100, Blackwell 50), modules (pytorch, vllm), Lustre paths | Verified 2026-11-20 on login1 (Slurm 23.02) |
+| NVwulf: one 20 GB user quota over all of /lustre (home + scratch); over quota puts the account on `reducequotablock-qos` and jobs pend with `QOSMaxJobsPerUserLimit`; `sbatch --test-only` doesn't show it | Verified 2026-11-20 |
+| NVwulf debug queues allow 2 h (the docs say 1 h) | Verified with `scontrol` 2026-11-20 |
+| `scripts/sw start` (0.4.0 code) opens a session; works against NVwulf with `SW_HOST=nvwulf` | Verified 2026-11-20 |
 | Globus via `module load globus/3.15.0` on milan, personal endpoint | Docs |
 | The login banner restricts using SBU computing to train AI models for entities headquartered in listed countries | Seen on login 2026-11-20 |
