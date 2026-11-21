@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.1 (2026-11-20)
+
+- `cluster-facts.sh` works on both clusters: it detects SeaWulf or NVwulf, lists every queue's load and node states, warns when a blocking QOS is attached, and reads the right quota (`myquota` on SeaWulf, `lfs quota` on NVwulf). Tested on both.
+- Fix: `sw` called itself by a relative path (`./sw`), which broke `start` failure handling and `put`/`get` from Git Bash. It now uses its absolute path.
+- NVwulf notes: the vllm and pytorch modules work (versions recorded), there's no shared LLM weight cache, and project space is per group.
+
 ## 0.6.0 (2026-11-20)
 
 - `references/getting-help.md`: when to contact RCI and how to draft a support ticket (RCI's required details plus job IDs, QOS and quota facts). Claude drafts; the user submits.

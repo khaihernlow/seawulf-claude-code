@@ -28,6 +28,9 @@
 # forwards to WSL by itself.
 set -u
 MAX_MB=${SW_MAX_MB:-50}
+# This script calls itself (put/get -> run, start -> stop, and through WSL on Windows), so it needs its
+# own absolute path: "$0" may be relative, like ./sw, which breaks once the working directory changes.
+SELF="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
 
 b64decode() { base64 -d 2> /dev/null || base64 -D; }   # GNU / newer macOS use -d, older macOS -D
 
@@ -46,7 +49,7 @@ case "${1:-}" in
       echo "__SW_B64__"
       printf 'echo "put: %s -> $dest/%s"\n' "$(basename "$src")" "$(basename "$src")"
     } > "$script"
-    "$0" run 600 "$script"; exit $?
+    "$SELF" run 600 "$script"; exit $?
     ;;
   get)
     src=${2:?usage: sw get REMOTE LOCAL_DIR}; dest=${3:?usage: sw get REMOTE LOCAL_DIR}
@@ -61,7 +64,7 @@ echo __SW_DATA__
 tar czf - -C "\$(dirname "\$src")" "\$(basename "\$src")" | base64
 echo __SW_DATA_END__
 EOF
-    "$0" run 600 "$script" > "$out"; rc=$?
+    "$SELF" run 600 "$script" > "$out"; rc=$?
     if [ $rc -ne 0 ]; then cat "$out" >&2; exit $rc; fi
     mkdir -p "$dest"
     awk '/^__SW_DATA__$/{on=1;next} /^__SW_DATA_END__$/{on=0} on' "$out" | b64decode | tar xzf - -C "$dest" \
@@ -76,7 +79,7 @@ case "$(uname -s)" in
     export MSYS_NO_PATHCONV=1
     distro=(); [ -n "${SW_WSL_DISTRO:-}" ] && distro=(-d "$SW_WSL_DISTRO")
     to_wsl() { wsl.exe "${distro[@]}" --exec wslpath -u "$(cygpath -w "$1")" < /dev/null | tr -d '\0\r'; }
-    self=$(to_wsl "$0")
+    self=$(to_wsl "$SELF")
     [ -n "$self" ] || { echo "sw: WSL is needed on Windows and did not respond (try: wsl --shutdown)" >&2; exit 3; }
     envs=(SW_HOST="${SW_HOST:-seawulf}" SW_MAX_MB="$MAX_MB")
     [ -n "${SW_STATE:-}" ] && envs+=(SW_STATE="$SW_STATE")
@@ -132,7 +135,7 @@ case "${1:-}" in
     if wait_for __SW_READY__ 120; then echo "session open"; exit 0; fi
     echo "session did not open. Last lines from ssh:"; tail -5 "$D/out.log"
     echo "Usual causes: Duo not approved in time; no open \`ssh $HOST\` login (password) or key for this session to use."
-    "$0" stop > /dev/null; exit 1
+    "$SELF" stop > /dev/null; exit 1
     ;;
   run)
     alive || { echo "sw: no session open. Ask the user, then run: sw start" >&2; exit 3; }

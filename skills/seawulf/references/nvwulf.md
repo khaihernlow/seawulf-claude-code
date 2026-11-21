@@ -23,7 +23,8 @@ NVwulf is a separate cluster for GPU and AI work, with its own login, home, stor
 
 - **One 20 GB user quota covers everything you own on `/lustre`, home and scratch together.** There are no separate project quotas on home or scratch (`lfs project -d` shows 0), so moving files between them doesn't free quota. Check with **`lfs quota -h -u $USER /lustre`**; there is no `myquota` on NVwulf. A `*` after "used" means over quota.
 - **Over quota means jobs stop running.** The account is switched to a QOS named `reducequotablock-qos` (max running jobs 0), and every job waits with reason **`QOSMaxJobsPerUserLimit`**. `sbatch --test-only` does *not* catch this, so it looks fine. Seen on 2026-11-20 with 27.4 GB used of 20 GB. Check `sacctmgr -n -P show assoc user=$USER format=Account,QOS`; a `reducequotablock` QOS means delete files to get under quota (or ask RCI). If jobs pend with `QOSMaxJobsPerUserLimit` while you have nothing running, check the quota first. Getting back under quota doesn't lift the block immediately: on 2026-11-20 the QOS was still in place minutes after usage dropped below 20 GB. Expect to wait for it to clear, or open a ticket asking RCI to lift it. Leave headroom too: a few hundred MB under the limit is one download away from being blocked again.
-- Keep big datasets and model weights in project space, not home or scratch.
+- Keep big datasets and model weights in project space, not home or scratch. Project folders are per research group (`/lustre/nvwulf/projects/<Group>-nvwulf`); check `id -Gn` for membership. Without one, the PI requests project space; a model's weights alone can exceed 20 GB.
+- `/lustre/nvwulf/datahub` holds shared datasets (on 2026-11-20 only AlphaFold databases); there was no shared cache of LLM weights.
 
 ## Queues
 
@@ -50,6 +51,7 @@ NVwulf is a separate cluster for GPU and AI work, with its own login, home, stor
   - **ready-made `pytorch/2.7.1` and `2.9.1`, `tensorflow/2.19.0`, `vllm/0.11.2` and `0.13.0`**;
   - `cuda12.8`, `nccl`, gcc 11 to 15, openmpi;
   - `claude-code/latest`.
+- The ready-made modules work (imports tested on the login node, 2026-11-20): `vllm/0.13.0` brings Python 3.11 and torch 2.9.0 (CUDA 12.8); `pytorch/2.9.1` brings Python 3.14 and torch 2.9.1 (CUDA 13.0). For vLLM or PyTorch work, `module load` is often enough: no env to build, and nothing against the 20 GB quota. `module purge` prints a harmless "Unloading shared" warning.
 - `singularity` (SingularityCE 4.5.1); no `apptainer`.
 - The login node reaches GitHub, Hugging Face and PyPI.
 - Rebuild compiled code on NVwulf rather than reusing SeaWulf builds.
