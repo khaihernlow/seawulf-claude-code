@@ -67,7 +67,7 @@ The session runs one command at a time, and `sw run` stops a command on the clus
 
 ## 2. Get current facts
 
-Once connected, run `"$SW" run 300 < scripts/cluster-facts.sh`. It prints the queues and limits, down or draining nodes, the user's Slurm accounts, quotas, project space, key modules and current jobs. Prefer it over remembered numbers: the cluster changes.
+Once connected, run `"$SW" run 300 < scripts/cluster-facts.sh`. It prints the queues and limits, down or draining nodes, the user's Slurm accounts, quotas, project space, key modules and current jobs. Prefer it over remembered numbers: the cluster changes. If it contradicts this skill (a new or missing queue, a changed limit, a moved path), trust the cluster, tell the user, and offer to draft an issue for the skill at https://github.com/khaihernlow/seawulf-claude-code/issues (the "outdated fact" form) with the command output and date.
 
 ## 3. Do the work
 

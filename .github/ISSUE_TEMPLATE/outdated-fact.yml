@@ -1,0 +1,18 @@
+name: A cluster fact is out of date
+description: A queue, limit, path, module or policy in the skill no longer matches the cluster.
+labels: [facts]
+body:
+  - type: input
+    id: where
+    attributes: {label: Which fact, description: "File and line, e.g. references/slurm.md, the a100 time limit"}
+    validations: {required: true}
+  - type: textarea
+    id: now
+    attributes:
+      label: What the cluster shows now
+      description: "Paste the command and its output (scripts/cluster-facts.sh helps), with the date."
+      render: text
+    validations: {required: true}
+  - type: input
+    id: source
+    attributes: {label: Source, description: "e.g. 'ran sinfo on milan1' or an RCI docs link"}

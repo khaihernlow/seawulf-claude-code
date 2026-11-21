@@ -1,0 +1,33 @@
+name: Something didn't work
+description: The plugin or its scripts misbehaved (connecting, sw, jobs, wrong advice).
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks! Please leave out passwords, Duo codes, tokens and anything private. Replace your NetID if you like.
+        Problems with the cluster itself (accounts, quotas, a blocked job) go to RCI: https://iacs.supportsystem.com/
+  - type: dropdown
+    id: os
+    attributes: {label: Your computer, options: [Windows (WSL), Windows (Git Bash only), macOS, Linux, Other]}
+    validations: {required: true}
+  - type: dropdown
+    id: cluster
+    attributes: {label: Cluster, options: [SeaWulf, NVwulf, Both or unsure]}
+    validations: {required: true}
+  - type: dropdown
+    id: way
+    attributes:
+      label: How Claude was connecting
+      options: [One session from the laptop (sw), SBU VPN, Claude Code on the cluster, Open OnDemand shell, Unsure]
+    validations: {required: true}
+  - type: textarea
+    id: what
+    attributes: {label: What happened, description: What you asked Claude, what it did, and what you expected.}
+    validations: {required: true}
+  - type: textarea
+    id: output
+    attributes: {label: Output, description: "The relevant output, e.g. from scripts/preflight.sh or sw.", render: text}
+  - type: input
+    id: version
+    attributes: {label: Plugin version, description: "From .claude-plugin/plugin.json or `claude plugin list`"}

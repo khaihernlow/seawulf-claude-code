@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.1 (2026-11-21)
+
+- Releases are published automatically when the plugin version changes (notes from this changelog).
+- README: how to update an installed plugin (`claude plugin marketplace update`, then `claude plugin update`).
+- Issue forms for bugs and for outdated cluster facts; cluster problems are pointed to RCI's helpdesk.
+- When `cluster-facts.sh` contradicts the skill, Claude trusts the cluster, tells the user and offers to draft an issue.
+
 ## 0.7.0 (2026-11-20)
 
 - The skill is renamed from `seawulf` to `using-seawulf` (folder `skills/using-seawulf/`), so "SeaWulf" always means the cluster. In Claude Code it appears as `seawulf:using-seawulf`. The plugin name and install commands are unchanged.

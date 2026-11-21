@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Help with SeaWulf or NVwulf themselves (accounts, quotas, blocked jobs)
+    url: https://iacs.supportsystem.com/
+    about: RCI's helpdesk. This repo can only fix the plugin.

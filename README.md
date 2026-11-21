@@ -28,6 +28,14 @@ In Claude Code:
 /plugin install seawulf@seawulf-claude-code
 ```
 
+**Updating:** installed plugins don't update themselves. To get the latest version, run these in a terminal, then
+restart Claude Code:
+
+```
+claude plugin marketplace update seawulf-claude-code
+claude plugin update seawulf@seawulf-claude-code
+```
+
 You need a SeaWulf account (your PI's project number and a ticket to RCI) and Duo on your phone. On Windows,
 you also need WSL. Claude walks you through the rest the first time.
 
@@ -154,9 +162,11 @@ triggering), and none of them connect to SeaWulf or send Duo pushes.
 ## Contributing
 
 Corrections are especially welcome. The cluster changes, and some parts are only tested from one setup.
+- Found a problem? Open an [issue](https://github.com/khaihernlow/seawulf-claude-code/issues/new/choose); there are forms for bugs and for outdated cluster facts.
 - Check a fact on the cluster (`scripts/cluster-facts.sh` helps), then update the reference **and** its row in `verified-facts.md` with the date and how you checked it.
 - Keep personal details (NetIDs, paths, Slurm accounts) out of the repo.
 - Keep `SKILL.md` short: details go in `references/`, one level deep.
+- Releases are automatic: bump `version` in `.claude-plugin/plugin.json` and add its section to `CHANGELOG.md`; a GitHub release with those notes follows.
 
 ## Status
 
