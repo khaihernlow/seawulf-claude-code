@@ -1,8 +1,8 @@
-"""Does the seawulf skill activate when it should, and stay quiet when it shouldn't?
+"""Does the using-seawulf skill activate when it should, and stay quiet when it shouldn't?
 
 Runs each query in queries.json through `claude -p` with this plugin loaded and ONLY the Skill tool
 available, so Claude can choose to activate a skill but can't run commands (no ssh, so no Duo pushes).
-A query counts as triggered if Claude calls the Skill tool for seawulf.
+A query counts as triggered if Claude calls the Skill tool for this plugin's skill (seawulf:using-seawulf).
 
     python evals/triggering/check_triggering.py [--claude PATH] [--model MODEL] [--runs N]
 

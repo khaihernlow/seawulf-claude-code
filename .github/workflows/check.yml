@@ -12,9 +12,9 @@ jobs:
 
       - name: Shell scripts and job templates (shellcheck, bash -n)
         run: |
-          shellcheck -S warning skills/seawulf/scripts/sw skills/seawulf/scripts/*.sh
-          shellcheck -S warning -s bash skills/seawulf/templates/*.sbatch
-          for f in skills/seawulf/scripts/sw skills/seawulf/scripts/*.sh skills/seawulf/templates/*.sbatch; do bash -n "$f"; done
+          shellcheck -S warning skills/using-seawulf/scripts/sw skills/using-seawulf/scripts/*.sh
+          shellcheck -S warning -s bash skills/using-seawulf/templates/*.sbatch
+          for f in skills/using-seawulf/scripts/sw skills/using-seawulf/scripts/*.sh skills/using-seawulf/templates/*.sbatch; do bash -n "$f"; done
 
       - name: Manifests are valid JSON
         run: for f in .claude-plugin/*.json; do python3 -m json.tool "$f" > /dev/null && echo "ok $f"; done
@@ -38,7 +38,7 @@ jobs:
         run: |
           python3 - <<'EOF'
           import re, sys
-          s = open("skills/seawulf/SKILL.md", encoding="utf-8").read()
+          s = open("skills/using-seawulf/SKILL.md", encoding="utf-8").read()
           name = re.search(r"^name: (.+)$", s, re.M).group(1)
           desc = re.search(r"^description: (.+)$", s, re.M).group(1)
           body_lines = s.split("---", 2)[2].count("\n")

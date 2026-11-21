@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0 (2026-11-20)
+
+- The skill is renamed from `seawulf` to `using-seawulf` (folder `skills/using-seawulf/`), so "SeaWulf" always means the cluster. In Claude Code it appears as `seawulf:using-seawulf`. The plugin name and install commands are unchanged.
+
 ## 0.6.1 (2026-11-20)
 
 - `cluster-facts.sh` works on both clusters: it detects SeaWulf or NVwulf, lists every queue's load and node states, warns when a blocking QOS is attached, and reads the right quota (`myquota` on SeaWulf, `lfs quota` on NVwulf). Tested on both.

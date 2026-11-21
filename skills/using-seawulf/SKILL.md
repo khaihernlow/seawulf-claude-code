@@ -1,5 +1,5 @@
 ---
-name: seawulf
+name: using-seawulf
 description: Works on Stony Brook University's HPC clusters (SeaWulf, and NVwulf for large GPU work) from Claude Code. Connects through Duo without locking the account, picks queues, writes and submits Slurm jobs (CPU, A100 GPU, arrays), diagnoses failed or stuck jobs, sets up conda/Python envs and modules in the right places, and handles storage, quotas and data transfer. Use whenever the user mentions SeaWulf, NVwulf, SBU or Stony Brook HPC, "the cluster", milan, Slurm/sbatch/squeue on SBU systems, or wants to run code, training or models on university GPUs or compute, even without HPC vocabulary.
 ---
 

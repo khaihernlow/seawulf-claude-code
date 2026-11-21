@@ -92,7 +92,7 @@ Claude then runs on the shared login node: commands are local, but the login-nod
 apply to Claude and everything it runs there. Heavy work still goes through Slurm, which the skill handles.
 Signing in on the cluster hasn't been tested yet; reports welcome.
 
-Details for all four: [connecting.md](skills/seawulf/references/connecting.md).
+Details for all four: [connecting.md](skills/using-seawulf/references/connecting.md).
 
 ## For a whole lab
 
@@ -111,18 +111,18 @@ To offer the plugin to everyone who opens a project, commit this to the project'
 
 | Path | What |
 | --- | --- |
-| [`skills/seawulf/SKILL.md`](skills/seawulf/SKILL.md) | What Claude reads first: the cluster in brief, the safety rules, how to connect, where to look next |
-| [`references/connecting.md`](skills/seawulf/references/connecting.md) | Accounts, hosts, OnDemand, ssh config and keys, Duo and lockouts, Windows/WSL, troubleshooting |
-| [`references/slurm.md`](skills/seawulf/references/slurm.md) | SeaWulf queues and limits, shared vs whole-node, A100 GPUs, batch and interactive jobs, arrays, dependencies, monitoring, failure causes |
-| [`references/software.md`](skills/seawulf/references/software.md) | Modules, conda/pip placement, GPU Python, Singularity, Jupyter and OnDemand apps |
-| [`references/storage-and-data.md`](skills/seawulf/references/storage-and-data.md) | Home, scratch, project space, quotas, the purge, moving data |
-| [`references/nvwulf.md`](skills/seawulf/references/nvwulf.md) | NVwulf: H200 and Blackwell GPU queues, limits, modules, and the quota that blocks jobs |
-| [`references/getting-help.md`](skills/seawulf/references/getting-help.md) | When to contact RCI, and drafting tickets you send yourself |
-| [`references/verified-facts.md`](skills/seawulf/references/verified-facts.md) | Every fact with its source and date |
-| [`templates/`](skills/seawulf/templates/) | Shared-CPU, A100 and array job scripts, validated on the cluster |
-| [`scripts/preflight.sh`](skills/seawulf/scripts/preflight.sh) | Checks your local setup and says what's missing (no Duo) |
-| [`scripts/sw`](skills/seawulf/scripts/sw) | The one-session runner: `start`, `run`, `put`/`get` files, `stop` (macOS, Linux, WSL; forwards from Git Bash) |
-| [`scripts/cluster-facts.sh`](skills/seawulf/scripts/cluster-facts.sh) | Current queues, limits, down nodes, your accounts, quotas, modules and jobs |
+| [`skills/using-seawulf/SKILL.md`](skills/using-seawulf/SKILL.md) | What Claude reads first: the cluster in brief, the safety rules, how to connect, where to look next |
+| [`references/connecting.md`](skills/using-seawulf/references/connecting.md) | Accounts, hosts, OnDemand, ssh config and keys, Duo and lockouts, Windows/WSL, troubleshooting |
+| [`references/slurm.md`](skills/using-seawulf/references/slurm.md) | SeaWulf queues and limits, shared vs whole-node, A100 GPUs, batch and interactive jobs, arrays, dependencies, monitoring, failure causes |
+| [`references/software.md`](skills/using-seawulf/references/software.md) | Modules, conda/pip placement, GPU Python, Singularity, Jupyter and OnDemand apps |
+| [`references/storage-and-data.md`](skills/using-seawulf/references/storage-and-data.md) | Home, scratch, project space, quotas, the purge, moving data |
+| [`references/nvwulf.md`](skills/using-seawulf/references/nvwulf.md) | NVwulf: H200 and Blackwell GPU queues, limits, modules, and the quota that blocks jobs |
+| [`references/getting-help.md`](skills/using-seawulf/references/getting-help.md) | When to contact RCI, and drafting tickets you send yourself |
+| [`references/verified-facts.md`](skills/using-seawulf/references/verified-facts.md) | Every fact with its source and date |
+| [`templates/`](skills/using-seawulf/templates/) | Shared-CPU, A100 and array job scripts, validated on the cluster |
+| [`scripts/preflight.sh`](skills/using-seawulf/scripts/preflight.sh) | Checks your local setup and says what's missing (no Duo) |
+| [`scripts/sw`](skills/using-seawulf/scripts/sw) | The one-session runner: `start`, `run`, `put`/`get` files, `stop` (macOS, Linux, WSL; forwards from Git Bash) |
+| [`scripts/cluster-facts.sh`](skills/using-seawulf/scripts/cluster-facts.sh) | Current queues, limits, down nodes, your accounts, quotas, modules and jobs |
 | [`evals/`](evals/) | Test cases for Claude's behaviour with the skill |
 | [`CHANGELOG.md`](CHANGELOG.md) | What changed in each release |
 
